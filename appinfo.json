@@ -1,0 +1,31 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "Katharine Berry",
+    "longName": "Stopwatch",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/stopwatch.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/buttons.png",
+                "name": "IMAGE_BUTTON_LABELS",
+                "type": "png"
+            }
+        ]
+    },
+    "shortName": "Stopwatch",
+    "uuid": "11a1cb08-065f-491e-82c4-83b9f9cb042c",
+    "versionCode": 2,
+    "versionLabel": "2.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
