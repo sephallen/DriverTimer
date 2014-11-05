@@ -29,8 +29,8 @@ static Window* window;
 
 // Main display
 static TextLayer* big_time_layer;
-static TextLayer* seconds_time_layer;
-static Layer* line_layer;
+// static TextLayer* seconds_time_layer;
+// static Layer* line_layer;
 static GBitmap* button_bitmap;
 static BitmapLayer* button_labels;
 
@@ -60,9 +60,9 @@ static int busy_animating = 0;
 // static GFont laps_font;
 
 #define TIMER_UPDATE 1
-#define FONT_BIG_TIME RESOURCE_ID_FONT_DEJAVU_SANS_BOLD_SUBSET_30
-#define FONT_SECONDS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_18
-#define FONT_LAPS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_22
+// #define FONT_BIG_TIME RESOURCE_ID_FONT_DEJAVU_SANS_BOLD_SUBSET_30
+// #define FONT_SECONDS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_18
+// #define FONT_LAPS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_22
 
 #define BUTTON_LAP BUTTON_ID_DOWN
 #define BUTTON_RUN BUTTON_ID_SELECT
@@ -87,7 +87,7 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void update_stopwatch();
 void handle_timer(void* data);
 int main();
-void draw_line(Layer *me, GContext* ctx);
+// void draw_line(Layer *me, GContext* ctx);
 void save_lap_time(double seconds, bool animate);
 void lap_time_handler(ClickRecognizerRef recognizer, Window *window);
 void shift_lap_layer(PropertyAnimation** animation, Layer* layer, GRect* target, int distance_multiplier);
@@ -111,25 +111,27 @@ void handle_init() {
     Layer *root_layer = window_get_root_layer(window);
 
     // Set up the big timer.
-	big_time_layer = text_layer_create(GRect(0, 5, 96, 35));
+	  big_time_layer = text_layer_create(GRect(0, 0, 144, 35));
     text_layer_set_background_color(big_time_layer, GColorBlack);
+    text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
 //     text_layer_set_font(big_time_layer, big_font);
     text_layer_set_text_color(big_time_layer, GColorWhite);
-    text_layer_set_text(big_time_layer, "00:00");
-    text_layer_set_text_alignment(big_time_layer, GTextAlignmentRight);
+    text_layer_set_text(big_time_layer, "0:00:00");
+    text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
     layer_add_child(root_layer, (Layer*)big_time_layer);
 
-    seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
-    text_layer_set_background_color(seconds_time_layer, GColorBlack);
+    // Milliseconds
+//     seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
+//     text_layer_set_background_color(seconds_time_layer, GColorBlack);
 //     text_layer_set_font(seconds_time_layer, seconds_font);
-    text_layer_set_text_color(seconds_time_layer, GColorWhite);
-    text_layer_set_text(seconds_time_layer, ".0");
-    layer_add_child(root_layer, (Layer*)seconds_time_layer);
+//     text_layer_set_text_color(seconds_time_layer, GColorWhite);
+//     text_layer_set_text(seconds_time_layer, ".0");
+//     layer_add_child(root_layer, (Layer*)seconds_time_layer);
 
     // Draw our nice line.
-    line_layer = layer_create(GRect(0, 45, 144, 2));
-	layer_set_update_proc(line_layer, draw_line);
-    layer_add_child(root_layer, line_layer);
+//     line_layer = layer_create(GRect(0, 45, 144, 2));
+// 	   layer_set_update_proc(line_layer, draw_line);
+//     layer_add_child(root_layer, line_layer);
 
     // Set up the lap time layers. These will be made visible later.
     for(int i = 0; i < LAP_TIME_SIZE; ++i) {
@@ -195,8 +197,8 @@ void handle_deinit() {
 	for(int i = 0; i < LAP_TIME_SIZE; ++i) {
 		text_layer_destroy(lap_layers[i]);
 	}
-	layer_destroy(line_layer);
-	text_layer_destroy(seconds_time_layer);
+// 	layer_destroy(line_layer);
+// 	text_layer_destroy(seconds_time_layer);
 	text_layer_destroy(big_time_layer);
 // 	fonts_unload_custom_font(big_font);
 // 	fonts_unload_custom_font(seconds_font);
@@ -204,11 +206,11 @@ void handle_deinit() {
 	window_destroy(window);
 }
 
-void draw_line(Layer *me, GContext* ctx) {
-    graphics_context_set_stroke_color(ctx, GColorWhite);
-    graphics_draw_line(ctx, GPoint(0, 0), GPoint(140, 0));
-    graphics_draw_line(ctx, GPoint(0, 1), GPoint(140, 1));
-}
+// void draw_line(Layer *me, GContext* ctx) {
+//     graphics_context_set_stroke_color(ctx, GColorWhite);
+//     graphics_draw_line(ctx, GPoint(0, 0), GPoint(140, 0));
+//     graphics_draw_line(ctx, GPoint(0, 1), GPoint(140, 1));
+// }
 
 void stop_stopwatch() {
     started = false;
@@ -244,7 +246,7 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
     stop_stopwatch();
     start_time = 0;
     last_lap_time = 0;
-	elapsed_time = 0;
+	  elapsed_time = 0;
     if(is_running) start_stopwatch();
     update_stopwatch();
 
@@ -269,12 +271,12 @@ void lap_time_handler(ClickRecognizerRef recognizer, Window *window) {
 }
 
 void update_stopwatch() {
-    static char big_time[] = "00:00";
+    static char big_time[] = "0:00:00";
     static char deciseconds_time[] = ".0";
     static char seconds_time[] = ":00";
 
     // Now convert to hours/minutes/seconds.
-    int tenths = (int)(elapsed_time * 10) % 10;
+//     int tenths = (int)(elapsed_time * 10) % 10;
     int seconds = (int)elapsed_time % 60;
     int minutes = (int)elapsed_time / 60 % 60;
     int hours = (int)elapsed_time / 3600;
@@ -285,17 +287,17 @@ void update_stopwatch() {
         return;
     }
 	
-	if(hours < 1) {
-		snprintf(big_time, 6, "%02d:%02d", minutes, seconds);
-		snprintf(deciseconds_time, 3, ".%d", tenths);
-	} else {
-		snprintf(big_time, 6, "%02d:%02d", hours, minutes);
-		snprintf(seconds_time, 4, ":%02d", seconds);
-	}
+// 	if(hours < 1) {
+		snprintf(big_time, 9, "%2d:%02d:%02d", hours, minutes, seconds);
+// 		snprintf(deciseconds_time, 3, ".%d", tenths);
+// 	} else {
+// 		snprintf(big_time, 6, "%02d:%02d", hours, minutes);
+// 		snprintf(seconds_time, 4, ":%02d", seconds);
+// 	}
 
     // Now draw the strings.
     text_layer_set_text(big_time_layer, big_time);
-    text_layer_set_text(seconds_time_layer, hours < 1 ? deciseconds_time : seconds_time);
+//     text_layer_set_text(seconds_time_layer, hours < 1 ? deciseconds_time : seconds_time);
 }
 
 void animation_stopped(Animation *animation, void *data) {
