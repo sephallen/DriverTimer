@@ -56,12 +56,12 @@ static double pause_time = 0;
 static int busy_animating = 0;
 
 // Fonts
-// static GFont big_font;
+// static GFont timer_font;
 // static GFont seconds_font;
 // static GFont laps_font;
 
 #define TIMER_UPDATE 1
-// #define FONT_BIG_TIME RESOURCE_ID_FONT_DEJAVU_SANS_BOLD_SUBSET_30
+// #define FONT_BIG_TIME RESOURCE_ID_FONT_ROBOTO_LIGHT_24
 // #define FONT_SECONDS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_18
 // #define FONT_LAPS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_22
 
@@ -96,72 +96,72 @@ void lap_restored(double time);
 
 void handle_init() {
 	window = window_create();
-    window_stack_push(window, true /* Animated */);
-    window_set_background_color(window, GColorBlack);
-    window_set_fullscreen(window, false);
+  window_stack_push(window, true /* Animated */);
+  window_set_background_color(window, GColorBlack);
+  window_set_fullscreen(window, false);
 
-    // Arrange for user input.
-    window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
+  // Arrange for user input.
+  window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
 
-    // Get our fonts
-//     big_font = fonts_load_custom_font(resource_get_handle(FONT_BIG_TIME));
-//     seconds_font = fonts_load_custom_font(resource_get_handle(FONT_SECONDS));
-//     laps_font = fonts_load_custom_font(resource_get_handle(FONT_LAPS));
+  // Get our fonts
+//   timer_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_24));
+  //     seconds_font = fonts_load_custom_font(resource_get_handle(FONT_SECONDS));
+  //     laps_font = fonts_load_custom_font(resource_get_handle(FONT_LAPS));
 
-    // Root layer
-    Layer *root_layer = window_get_root_layer(window);
+  // Root layer
+  Layer *root_layer = window_get_root_layer(window);
 
-    // Set up the big timer.
-	  big_time_layer = text_layer_create(GRect(0, 0, 144, 35));
-    text_layer_set_background_color(big_time_layer, GColorBlack);
-    text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-//     text_layer_set_font(big_time_layer, big_font);
-    text_layer_set_text_color(big_time_layer, GColorWhite);
-    text_layer_set_text(big_time_layer, "0:00:00");
-    text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
-    layer_add_child(root_layer, (Layer*)big_time_layer);
+  // Set up the big timer.
+  big_time_layer = text_layer_create(GRect(0, 0, 144, 35));
+  text_layer_set_background_color(big_time_layer, GColorBlack);
+  text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  //     text_layer_set_font(big_time_layer, timer_font);
+  text_layer_set_text_color(big_time_layer, GColorWhite);
+  text_layer_set_text(big_time_layer, "0:00:00");
+  text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)big_time_layer);
   
-    // Set up remaining drive time layer
-    remaining_drive_layer = text_layer_create(GRect(0, 36, 144, 35));
-    text_layer_set_background_color(remaining_drive_layer, GColorBlack);
-    text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_text_color(remaining_drive_layer, GColorWhite);
-    text_layer_set_text(remaining_drive_layer, "0:00:00");
-    text_layer_set_text_alignment(remaining_drive_layer, GTextAlignmentLeft);
-    layer_add_child(root_layer, (Layer*)remaining_drive_layer);
+  // Set up remaining drive time layer
+  remaining_drive_layer = text_layer_create(GRect(0, 36, 144, 35));
+  text_layer_set_background_color(remaining_drive_layer, GColorBlack);
+  text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text_color(remaining_drive_layer, GColorWhite);
+  text_layer_set_text(remaining_drive_layer, "0:00:00");
+  text_layer_set_text_alignment(remaining_drive_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)remaining_drive_layer);
 
-    // Milliseconds
-//     seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
-//     text_layer_set_background_color(seconds_time_layer, GColorBlack);
-//     text_layer_set_font(seconds_time_layer, seconds_font);
-//     text_layer_set_text_color(seconds_time_layer, GColorWhite);
-//     text_layer_set_text(seconds_time_layer, ".0");
-//     layer_add_child(root_layer, (Layer*)seconds_time_layer);
+  // Milliseconds
+  //     seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
+  //     text_layer_set_background_color(seconds_time_layer, GColorBlack);
+  //     text_layer_set_font(seconds_time_layer, seconds_font);
+  //     text_layer_set_text_color(seconds_time_layer, GColorWhite);
+  //     text_layer_set_text(seconds_time_layer, ".0");
+  //     layer_add_child(root_layer, (Layer*)seconds_time_layer);
 
-    // Draw our nice line.
-//     line_layer = layer_create(GRect(0, 45, 144, 2));
-// 	   layer_set_update_proc(line_layer, draw_line);
-//     layer_add_child(root_layer, line_layer);
+  // Draw our nice line.
+  //     line_layer = layer_create(GRect(0, 45, 144, 2));
+  // 	   layer_set_update_proc(line_layer, draw_line);
+  //     layer_add_child(root_layer, line_layer);
 
-    // Set up the lap time layers. These will be made visible later.
-    for(int i = 0; i < LAP_TIME_SIZE; ++i) {
-		lap_layers[i] = text_layer_create(GRect(-139, 52, 139, 30));
-        text_layer_set_background_color(lap_layers[i], GColorClear);
-//         text_layer_set_font(lap_layers[i], laps_font);
-        text_layer_set_text_color(lap_layers[i], GColorWhite);
-        text_layer_set_text(lap_layers[i], lap_times[i]);
-        layer_add_child(root_layer, (Layer*)lap_layers[i]);
-    }
+  // Set up the lap time layers. These will be made visible later.
+  for(int i = 0; i < LAP_TIME_SIZE; ++i) {
+    lap_layers[i] = text_layer_create(GRect(-139, 52, 139, 30));
+    text_layer_set_background_color(lap_layers[i], GColorClear);
+    //         text_layer_set_font(lap_layers[i], laps_font);
+    text_layer_set_text_color(lap_layers[i], GColorWhite);
+    text_layer_set_text(lap_layers[i], lap_times[i]);
+    layer_add_child(root_layer, (Layer*)lap_layers[i]);
+  }
 
-    // Add some button labels
+  // Add some button labels
 	
 	button_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUTTON_LABELS);
 	button_labels = bitmap_layer_create(GRect(130, 10, 14, 136));
 	bitmap_layer_set_bitmap(button_labels, button_bitmap);
-    layer_add_child(root_layer, (Layer*)button_labels);
+  layer_add_child(root_layer, (Layer*)button_labels);
 
-    // Set up lap time stuff, too.
-    init_lap_window();
+  // Set up lap time stuff, too.
+  init_lap_window();
 	
 	struct StopwatchState state;
 	if(persist_read_data(PERSIST_STATE, &state, sizeof(state)) != E_DOES_NOT_EXIST) {
@@ -211,7 +211,7 @@ void handle_deinit() {
 // 	text_layer_destroy(seconds_time_layer);
 	text_layer_destroy(big_time_layer);
   text_layer_destroy(remaining_drive_layer);
-// 	fonts_unload_custom_font(big_font);
+// 	fonts_unload_custom_font(timer_font);
 // 	fonts_unload_custom_font(seconds_font);
 // 	fonts_unload_custom_font(laps_font);
 	window_destroy(window);
@@ -292,6 +292,9 @@ void update_stopwatch() {
     int seconds = (int)elapsed_time % 60;
     int minutes = (int)elapsed_time / 60 % 60;
     int hours = (int)elapsed_time / 3600;
+    int rSeconds = (16200 - (int)elapsed_time) % 60;
+    int rMinutes = (16200 - (int)elapsed_time) / 60 % 60;
+    int rHours = (16200 - (int)elapsed_time) / 3600;
 
     // We don't need to fit two digit hours, so stop timing here.
     if(hours > 9) {
@@ -300,9 +303,9 @@ void update_stopwatch() {
     }
 	
 // 	if(hours < 1) {
-  // Do some math here for remaining time eg 4-hours, 30-minutes, 60-seconds
+  // Create string from timer and remaining time for display
 		snprintf(big_time, 9, "%2d:%02d:%02d", hours, minutes, seconds);
-    snprintf(remaining_drive, 9, "%2d:%02d:%02d", 4-hours, 29-minutes, 59-seconds);
+    snprintf(remaining_drive, 9, "%2d:%02d:%02d", rHours, rMinutes, rSeconds);
 //     }
 // 		snprintf(deciseconds_time, 3, ".%d", tenths);
 // 	} else {
