@@ -29,6 +29,7 @@ static Window* window;
 
 // Main display
 static TextLayer* big_time_layer;
+static TextLayer* remaining_drive_layer;
 // static TextLayer* seconds_time_layer;
 // static Layer* line_layer;
 static GBitmap* button_bitmap;
@@ -40,7 +41,7 @@ static BitmapLayer* button_labels;
 static char lap_times[LAP_TIME_SIZE][11] = {"00:00:00.0", "00:01:00.0", "00:02:00.0", "00:03:00.0", "00:04:00.0"};
 static TextLayer* lap_layers[LAP_TIME_SIZE]; // an extra temporary layer
 static int next_lap_layer = 0;
-static int lap_time_count = 0;
+// static int lap_time_count = 0;
 static double last_lap_time = 0;
 
 // Actually keeping track of time
@@ -119,6 +120,15 @@ void handle_init() {
     text_layer_set_text(big_time_layer, "0:00:00");
     text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
     layer_add_child(root_layer, (Layer*)big_time_layer);
+  
+    // Set up remaining drive time layer
+    remaining_drive_layer = text_layer_create(GRect(0, 36, 144, 35));
+    text_layer_set_background_color(remaining_drive_layer, GColorBlack);
+    text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+    text_layer_set_text_color(remaining_drive_layer, GColorWhite);
+    text_layer_set_text(remaining_drive_layer, "0:00:00");
+    text_layer_set_text_alignment(remaining_drive_layer, GTextAlignmentLeft);
+    layer_add_child(root_layer, (Layer*)remaining_drive_layer);
 
     // Milliseconds
 //     seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
@@ -200,6 +210,7 @@ void handle_deinit() {
 // 	layer_destroy(line_layer);
 // 	text_layer_destroy(seconds_time_layer);
 	text_layer_destroy(big_time_layer);
+  text_layer_destroy(remaining_drive_layer);
 // 	fonts_unload_custom_font(big_font);
 // 	fonts_unload_custom_font(seconds_font);
 // 	fonts_unload_custom_font(laps_font);
@@ -272,8 +283,9 @@ void lap_time_handler(ClickRecognizerRef recognizer, Window *window) {
 
 void update_stopwatch() {
     static char big_time[] = "0:00:00";
-    static char deciseconds_time[] = ".0";
-    static char seconds_time[] = ":00";
+    static char remaining_drive[] = "0:00:00";
+//     static char deciseconds_time[] = ".0";
+//     static char seconds_time[] = ":00";
 
     // Now convert to hours/minutes/seconds.
 //     int tenths = (int)(elapsed_time * 10) % 10;
@@ -281,14 +293,17 @@ void update_stopwatch() {
     int minutes = (int)elapsed_time / 60 % 60;
     int hours = (int)elapsed_time / 3600;
 
-    // We can't fit three digit hours, so stop timing here.
-    if(hours > 99) {
+    // We don't need to fit two digit hours, so stop timing here.
+    if(hours > 9) {
         stop_stopwatch();
         return;
     }
 	
 // 	if(hours < 1) {
+  // Do some math here for remaining time eg 4-hours, 30-minutes, 60-seconds
 		snprintf(big_time, 9, "%2d:%02d:%02d", hours, minutes, seconds);
+    snprintf(remaining_drive, 9, "%2d:%02d:%02d", 4-hours, 29-minutes, 59-seconds);
+//     }
 // 		snprintf(deciseconds_time, 3, ".%d", tenths);
 // 	} else {
 // 		snprintf(big_time, 6, "%02d:%02d", hours, minutes);
@@ -297,6 +312,7 @@ void update_stopwatch() {
 
     // Now draw the strings.
     text_layer_set_text(big_time_layer, big_time);
+    text_layer_set_text(remaining_drive_layer, remaining_drive);
 //     text_layer_set_text(seconds_time_layer, hours < 1 ? deciseconds_time : seconds_time);
 }
 
