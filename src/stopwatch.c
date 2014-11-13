@@ -30,8 +30,9 @@ static Window* window;
 // Main display
 static TextLayer* big_time_layer;
 static TextLayer* remaining_drive_layer;
-// static TextLayer* seconds_time_layer;
-// static Layer* line_layer;
+static TextLayer* big_rest_layer;
+static TextLayer* remaining_rest_layer;
+static Layer* line_layer;
 static GBitmap* button_bitmap;
 static BitmapLayer* button_labels;
 
@@ -88,7 +89,7 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void update_stopwatch();
 void handle_timer(void* data);
 int main();
-// void draw_line(Layer *me, GContext* ctx);
+void draw_line(Layer *me, GContext* ctx);
 void save_lap_time(double seconds, bool animate);
 void lap_time_handler(ClickRecognizerRef recognizer, Window *window);
 void shift_lap_layer(PropertyAnimation** animation, Layer* layer, GRect* target, int distance_multiplier);
@@ -113,9 +114,8 @@ void handle_init() {
 
   // Set up the big timer.
   big_time_layer = text_layer_create(GRect(0, 0, 144, 35));
-  text_layer_set_background_color(big_time_layer, GColorBlack);
+  text_layer_set_background_color(big_time_layer, GColorClear);
   text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  //     text_layer_set_font(big_time_layer, timer_font);
   text_layer_set_text_color(big_time_layer, GColorWhite);
   text_layer_set_text(big_time_layer, "0:00:00");
   text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
@@ -123,12 +123,35 @@ void handle_init() {
   
   // Set up remaining drive time layer
   remaining_drive_layer = text_layer_create(GRect(0, 36, 144, 35));
-  text_layer_set_background_color(remaining_drive_layer, GColorBlack);
+  text_layer_set_background_color(remaining_drive_layer, GColorClear);
   text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_color(remaining_drive_layer, GColorWhite);
   text_layer_set_text(remaining_drive_layer, "0:00:00");
   text_layer_set_text_alignment(remaining_drive_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)remaining_drive_layer);
+  
+  // Draw our nice line.
+  line_layer = layer_create(GRect(0, 71, 144, 1));
+  layer_set_update_proc(line_layer, draw_line);
+  layer_add_child(root_layer, line_layer);
+  
+  // Set up the rest timer.
+  big_rest_layer = text_layer_create(GRect(0, 72, 144, 35));
+  text_layer_set_background_color(big_rest_layer, GColorClear);
+  text_layer_set_font(big_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_text_color(big_rest_layer, GColorWhite);
+  text_layer_set_text(big_rest_layer, "0:00:00");
+  text_layer_set_text_alignment(big_rest_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)big_rest_layer);
+  
+  // Set up remaining rest time layer
+  remaining_rest_layer = text_layer_create(GRect(0, 107, 144, 35));
+  text_layer_set_background_color(remaining_rest_layer, GColorClear);
+  text_layer_set_font(remaining_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_text_color(remaining_rest_layer, GColorWhite);
+  text_layer_set_text(remaining_rest_layer, "0:00:00");
+  text_layer_set_text_alignment(remaining_rest_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)remaining_rest_layer);
 
   // Milliseconds
   //     seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
@@ -137,11 +160,6 @@ void handle_init() {
   //     text_layer_set_text_color(seconds_time_layer, GColorWhite);
   //     text_layer_set_text(seconds_time_layer, ".0");
   //     layer_add_child(root_layer, (Layer*)seconds_time_layer);
-
-  // Draw our nice line.
-  //     line_layer = layer_create(GRect(0, 45, 144, 2));
-  // 	   layer_set_update_proc(line_layer, draw_line);
-  //     layer_add_child(root_layer, line_layer);
 
   // Set up the lap time layers. These will be made visible later.
   for(int i = 0; i < LAP_TIME_SIZE; ++i) {
@@ -154,7 +172,6 @@ void handle_init() {
   }
 
   // Add some button labels
-	
 	button_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUTTON_LABELS);
 	button_labels = bitmap_layer_create(GRect(130, 10, 14, 136));
 	bitmap_layer_set_bitmap(button_labels, button_bitmap);
@@ -207,21 +224,23 @@ void handle_deinit() {
 	for(int i = 0; i < LAP_TIME_SIZE; ++i) {
 		text_layer_destroy(lap_layers[i]);
 	}
-// 	layer_destroy(line_layer);
+	layer_destroy(line_layer);
 // 	text_layer_destroy(seconds_time_layer);
 	text_layer_destroy(big_time_layer);
   text_layer_destroy(remaining_drive_layer);
+  text_layer_destroy(big_rest_layer);
+  text_layer_destroy(remaining_rest_layer);
 // 	fonts_unload_custom_font(timer_font);
 // 	fonts_unload_custom_font(seconds_font);
 // 	fonts_unload_custom_font(laps_font);
 	window_destroy(window);
 }
 
-// void draw_line(Layer *me, GContext* ctx) {
-//     graphics_context_set_stroke_color(ctx, GColorWhite);
-//     graphics_draw_line(ctx, GPoint(0, 0), GPoint(140, 0));
-//     graphics_draw_line(ctx, GPoint(0, 1), GPoint(140, 1));
-// }
+void draw_line(Layer *me, GContext* ctx) {
+    graphics_context_set_stroke_color(ctx, GColorWhite);
+    graphics_draw_line(ctx, GPoint(0, 0), GPoint(140, 0));
+    graphics_draw_line(ctx, GPoint(0, 1), GPoint(140, 1));
+}
 
 void stop_stopwatch() {
     started = false;
@@ -312,8 +331,8 @@ void update_stopwatch() {
   }
 
   // Create string from timer and remaining time for display
-  snprintf(big_time, 9, "%2d:%02d:%02d", hours, minutes, seconds);
-  snprintf(remaining_drive, 9, "%2d:%02d:%02d", rHours, rMinutes, rSeconds);
+  snprintf(big_time, 9, "%d:%02d:%02d", hours, minutes, seconds);
+  snprintf(remaining_drive, 9, "%d:%02d:%02d", rHours, rMinutes, rSeconds);
 
   // Now draw the strings.
   text_layer_set_text(big_time_layer, big_time);
