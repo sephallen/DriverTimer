@@ -282,47 +282,42 @@ void lap_time_handler(ClickRecognizerRef recognizer, Window *window) {
 }
 
 void update_stopwatch() {
-    static char big_time[] = "0:00:00";
-    static char remaining_drive[] = "0:00:00";
-//     static char deciseconds_time[] = ".0";
-//     static char seconds_time[] = ":00";
-
-    // Now convert to hours/minutes/seconds.
-//     int tenths = (int)(elapsed_time * 10) % 10;
-    int seconds = (int)elapsed_time % 60;
-    int minutes = (int)elapsed_time / 60 % 60;
-    int hours = (int)elapsed_time / 3600;
-    int rSeconds = (16200 - (int)elapsed_time) % 60;
-    int rMinutes = (16200 - (int)elapsed_time) / 60 % 60;
-    int rHours = (16200 - (int)elapsed_time) / 3600;
-
-    // We don't need to fit two digit hours, so stop timing here.
-//     if(hours > 9) {
-//         stop_stopwatch();
-//         return;
-//     }
   
-  // When driver time runs out, stop timer and reset
+  static char big_time[] = "0:00:00";
+  static char remaining_drive[] = "0:00:00";
+
+  // Now convert to hours/minutes/seconds.
+  int seconds = (int)elapsed_time % 60;
+  int minutes = (int)elapsed_time / 60 % 60;
+  int hours = (int)elapsed_time / 3600;
+  int rSeconds = (16200 - (int)elapsed_time) % 60;
+  int rMinutes = (16200 - (int)elapsed_time) / 60 % 60;
+  int rHours = (16200 - (int)elapsed_time) / 3600;
+  
+  // When one hour of driving time remains, alert user with one small pulse
+  if((int)elapsed_time > 12600) {
+    vibes_short_pulse();
+  }
+  
+  // When thirty minites of driving time remain, alert user with two small pulses
+  if((int)elapsed_time > 10800) {
+    vibes_double_pulse();
+  }
+
+  // When driver time runs out, stop timer and long vibrate to alert user
   if((int)elapsed_time > 16200) {
     stop_stopwatch();
+    vibes_long_pulse();
     return;
   }
-	
-// 	if(hours < 1) {
-  // Create string from timer and remaining time for display
-		snprintf(big_time, 9, "%2d:%02d:%02d", hours, minutes, seconds);
-    snprintf(remaining_drive, 9, "%2d:%02d:%02d", rHours, rMinutes, rSeconds);
-//     }
-// 		snprintf(deciseconds_time, 3, ".%d", tenths);
-// 	} else {
-// 		snprintf(big_time, 6, "%02d:%02d", hours, minutes);
-// 		snprintf(seconds_time, 4, ":%02d", seconds);
-// 	}
 
-    // Now draw the strings.
-    text_layer_set_text(big_time_layer, big_time);
-    text_layer_set_text(remaining_drive_layer, remaining_drive);
-//     text_layer_set_text(seconds_time_layer, hours < 1 ? deciseconds_time : seconds_time);
+  // Create string from timer and remaining time for display
+  snprintf(big_time, 9, "%2d:%02d:%02d", hours, minutes, seconds);
+  snprintf(remaining_drive, 9, "%2d:%02d:%02d", rHours, rMinutes, rSeconds);
+
+  // Now draw the strings.
+  text_layer_set_text(big_time_layer, big_time);
+  text_layer_set_text(remaining_drive_layer, remaining_drive);
 }
 
 void animation_stopped(Animation *animation, void *data) {
