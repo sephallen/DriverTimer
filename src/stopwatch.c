@@ -297,10 +297,16 @@ void update_stopwatch() {
     int rHours = (16200 - (int)elapsed_time) / 3600;
 
     // We don't need to fit two digit hours, so stop timing here.
-    if(hours > 9) {
-        stop_stopwatch();
-        return;
-    }
+//     if(hours > 9) {
+//         stop_stopwatch();
+//         return;
+//     }
+  
+  // When driver time runs out, stop timer and reset
+  if((int)elapsed_time > 16200) {
+    stop_stopwatch();
+    return;
+  }
 	
 // 	if(hours < 1) {
   // Create string from timer and remaining time for display
