@@ -314,19 +314,22 @@ void update_stopwatch() {
   int rHours = (16200 - (int)elapsed_time) / 3600;
   
   // When one hour of driving time remains, alert user with one small pulse
-  if((int)elapsed_time > 12600) {
+  if((int)elapsed_time == 12600) {
     vibes_short_pulse();
   }
   
   // When thirty minites of driving time remain, alert user with two small pulses
-  if((int)elapsed_time > 10800) {
+  if((int)elapsed_time == 10800) {
     vibes_double_pulse();
   }
 
   // When driver time runs out, stop timer and long vibrate to alert user
-  if((int)elapsed_time > 16200) {
+  if((int)elapsed_time == 16199) {
+    vibes_double_pulse();
+  }
+  
+  if((int)elapsed_time > 16199) {
     stop_stopwatch();
-    vibes_long_pulse();
     return;
   }
 
