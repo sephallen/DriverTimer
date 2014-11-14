@@ -140,7 +140,7 @@ void handle_init() {
   text_layer_set_background_color(big_rest_layer, GColorClear);
   text_layer_set_font(big_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_color(big_rest_layer, GColorWhite);
-  text_layer_set_text(big_rest_layer, "0:00:00");
+  text_layer_set_text(big_rest_layer, "00:00");
   text_layer_set_text_alignment(big_rest_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)big_rest_layer);
   
@@ -149,7 +149,7 @@ void handle_init() {
   text_layer_set_background_color(remaining_rest_layer, GColorClear);
   text_layer_set_font(remaining_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_color(remaining_rest_layer, GColorWhite);
-  text_layer_set_text(remaining_rest_layer, "0:00:00");
+  text_layer_set_text(remaining_rest_layer, "00:00");
   text_layer_set_text_alignment(remaining_rest_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)remaining_rest_layer);
 
@@ -319,7 +319,7 @@ void update_stopwatch() {
   }
   
   // When thirty minites of driving time remain, alert user with two small pulses
-  if((int)elapsed_time == 10800) {
+  if((int)elapsed_time == 14400) {
     vibes_double_pulse();
   }
 
@@ -328,7 +328,7 @@ void update_stopwatch() {
     vibes_double_pulse();
   }
   
-  if((int)elapsed_time > 16199) {
+  if((int)elapsed_time > 16200) {
     stop_stopwatch();
     return;
   }
