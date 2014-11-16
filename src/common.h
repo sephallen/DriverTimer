@@ -22,7 +22,7 @@
 
 
 #define PERSIST_STATE 1
-#define PERSIST_LAPS 4
+// #define PERSIST_LAPS 4
 
-void format_lap(double lap_time, char* buffer);
+// void format_lap(double lap_time, char* buffer);
 double float_time_ms();
