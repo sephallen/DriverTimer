@@ -9,6 +9,18 @@
     "resources": {
         "media": [
             {
+                "characterRegex": "[0-9:. ]",
+                "file": "fonts/roboto-light.ttf",
+                "name": "FONT_ROBOTO_LIGHT_22",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9:. ]",
+                "file": "fonts/roboto-light.ttf",
+                "name": "FONT_ROBOTO_LIGHT_34",
+                "type": "font"
+            },
+            {
                 "file": "images/stopwatch.png",
                 "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",

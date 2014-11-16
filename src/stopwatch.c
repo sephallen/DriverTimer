@@ -34,7 +34,8 @@ static TextLayer* remaining_rest_layer;
 static Layer* line_layer;
 static GBitmap* button_bitmap;
 static BitmapLayer* button_labels;
-
+static GFont large_font;
+static GFont small_font;
 
 // Lap time display
 // #define LAP_TIME_SIZE 5
@@ -61,7 +62,7 @@ static int busy_animating = 0;
 // static GFont laps_font;
 
 #define TIMER_UPDATE 1
-// #define FONT_BIG_TIME RESOURCE_ID_FONT_ROBOTO_LIGHT_24
+// #define FONT_BIG_TIME RESOURCE_ID_FONT_ROBOTO_LIGHT_28
 // #define FONT_SECONDS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_18
 // #define FONT_LAPS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_22
 
@@ -104,7 +105,8 @@ void handle_init() {
   window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
 
   // Get our fonts
-//   timer_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_24));
+  large_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_34));
+  small_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_22));
   //     seconds_font = fonts_load_custom_font(resource_get_handle(FONT_SECONDS));
   //     laps_font = fonts_load_custom_font(resource_get_handle(FONT_LAPS));
 
@@ -114,7 +116,8 @@ void handle_init() {
   // Set up the big timer.
   big_time_layer = text_layer_create(GRect(0, 0, 144, 35));
   text_layer_set_background_color(big_time_layer, GColorClear);
-  text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+//   text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(big_time_layer, large_font);
   text_layer_set_text_color(big_time_layer, GColorWhite);
   text_layer_set_text(big_time_layer, "0:00:00");
   text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
@@ -123,7 +126,8 @@ void handle_init() {
   // Set up remaining drive time layer
   remaining_drive_layer = text_layer_create(GRect(0, 36, 144, 35));
   text_layer_set_background_color(remaining_drive_layer, GColorClear);
-  text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+//   text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_font(remaining_drive_layer, small_font);
   text_layer_set_text_color(remaining_drive_layer, GColorWhite);
   text_layer_set_text(remaining_drive_layer, "4:30:00");
   text_layer_set_text_alignment(remaining_drive_layer, GTextAlignmentLeft);
@@ -137,7 +141,8 @@ void handle_init() {
   // Set up the rest timer.
   big_rest_layer = text_layer_create(GRect(0, 72, 144, 35));
   text_layer_set_background_color(big_rest_layer, GColorClear);
-  text_layer_set_font(big_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+//   text_layer_set_font(big_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(big_rest_layer, large_font);
   text_layer_set_text_color(big_rest_layer, GColorWhite);
   text_layer_set_text(big_rest_layer, "00:00");
   text_layer_set_text_alignment(big_rest_layer, GTextAlignmentLeft);
@@ -146,7 +151,8 @@ void handle_init() {
   // Set up remaining rest time layer
   remaining_rest_layer = text_layer_create(GRect(0, 107, 144, 35));
   text_layer_set_background_color(remaining_rest_layer, GColorClear);
-  text_layer_set_font(remaining_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+//   text_layer_set_font(remaining_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  text_layer_set_font(remaining_rest_layer, small_font);
   text_layer_set_text_color(remaining_rest_layer, GColorWhite);
   text_layer_set_text(remaining_rest_layer, "45:00");
   text_layer_set_text_alignment(remaining_rest_layer, GTextAlignmentLeft);
@@ -229,7 +235,8 @@ void handle_deinit() {
   text_layer_destroy(remaining_drive_layer);
   text_layer_destroy(big_rest_layer);
   text_layer_destroy(remaining_rest_layer);
-// 	fonts_unload_custom_font(timer_font);
+	fonts_unload_custom_font(large_font);
+  fonts_unload_custom_font(small_font);
 // 	fonts_unload_custom_font(seconds_font);
 // 	fonts_unload_custom_font(laps_font);
 	window_destroy(window);
