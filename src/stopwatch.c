@@ -1,3 +1,8 @@
+/* 
+ * Driver Timer by Joseph Allen.
+ * Based on the Pebble Stopwatch code from https://github.com/Katharine/pebble-stopwatch
+ */
+
 /*
  * Pebble Stopwatch - the big, ugly file.
  * Copyright (C) 2013 Katharine Berry
@@ -71,13 +76,6 @@ struct StopwatchState {
 	double rest_start_time;
 	double pause_rest_time;
 } __attribute__((__packed__));
-
-// struct RestStopwatchState {
-// 	bool rest_started;
-// 	double rest_elapsed_time;
-// 	double rest_start_time;
-// 	double pause_rest_time;
-// } __attribute__((__packed__));
 
 // void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void config_provider(Window *window);
@@ -291,6 +289,14 @@ void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
     rest_elapsed_time = 0;
     update_rest_stopwatch();
   }
+  if(rest_elapsed_time >= 900 ) {
+    if(rest_elapsed_time <= 2700) {
+      double rest_now = float_time_ms();
+      rest_start_time = rest_now - 900;
+      rest_elapsed_time = 900;
+      update_rest_stopwatch();
+    }
+  }
 }
 
 void toggle_rest_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
@@ -308,8 +314,6 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
   if(busy_animating) return;
   bool is_running = started;
   bool rest_is_running = rest_started;
-//   stop_stopwatch();
-//   stop_rest_stopwatch();
   start_time = 0;
   rest_start_time = 0;
   elapsed_time = 0;
@@ -400,7 +404,7 @@ void update_rest_stopwatch() {
   int rest_rMinutes = (2700 - (int)rest_elapsed_time) / 60 % 60;
   
   // When fifteen minutes of rest time has passed, alert user with a short pulse
-  if((int)rest_elapsed_time == 900) {
+  if((int)rest_elapsed_time == 899) {
     vibes_short_pulse();
     return;
   }
@@ -414,6 +418,7 @@ void update_rest_stopwatch() {
   if((int)rest_elapsed_time > 2700) {
     stop_rest_stopwatch();
     vibes_cancel();
+    start_time = 0;
     elapsed_time = 0;
     update_stopwatch();
     return;

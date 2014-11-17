@@ -1,3 +1,8 @@
+/* 
+ * Driver Timer by Joseph Allen.
+ * Based on the Pebble Stopwatch code from https://github.com/Katharine/pebble-stopwatch
+ */
+
 /*
  * Pebble Stopwatch - common utility header file
  * Copyright (C) 2013 Katharine Berry
@@ -26,4 +31,3 @@
 
 // void format_lap(double lap_time, char* buffer);
 double float_time_ms();
-// double rest_float_time_ms();
