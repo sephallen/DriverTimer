@@ -309,6 +309,7 @@ void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
     if(rest_is_running) stop_rest_stopwatch();
     update_stopwatch();
     update_rest_stopwatch();
+    start_stopwatch();
   }
 }
 
