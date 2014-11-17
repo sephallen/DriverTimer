@@ -26,3 +26,4 @@
 
 // void format_lap(double lap_time, char* buffer);
 double float_time_ms();
+// double rest_float_time_ms();

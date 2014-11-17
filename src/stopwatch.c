@@ -66,14 +66,18 @@ struct StopwatchState {
 	double elapsed_time;
 	double start_time;
 	double pause_time;
-} __attribute__((__packed__));
-
-struct RestStopwatchState {
-	bool rest_started;
+  bool rest_started;
 	double rest_elapsed_time;
 	double rest_start_time;
 	double pause_rest_time;
 } __attribute__((__packed__));
+
+// struct RestStopwatchState {
+// 	bool rest_started;
+// 	double rest_elapsed_time;
+// 	double rest_start_time;
+// 	double pause_rest_time;
+// } __attribute__((__packed__));
 
 // void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void config_provider(Window *window);
@@ -173,31 +177,27 @@ void handle_init() {
   layer_add_child(root_layer, (Layer*)button_labels);
 	
 	struct StopwatchState state;
-	if(persist_read_data(PERSIST_STATE, &state, sizeof(state)) != E_DOES_NOT_EXIST) {
+  if(persist_read_data(PERSIST_STATE, &state, sizeof(state)) != E_DOES_NOT_EXIST) {
 		started = state.started;
 		start_time = state.start_time;
 		elapsed_time = state.elapsed_time;
 		pause_time = state.pause_time;
-		update_stopwatch();
+    rest_started = state.rest_started;
+		rest_start_time = state.rest_start_time;
+		rest_elapsed_time = state.rest_elapsed_time;
+		pause_rest_time = state.pause_rest_time;
+    update_stopwatch();
+		update_rest_stopwatch();
 		if(started) {
 			update_timer = app_timer_register(100, handle_timer, NULL);
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "Started timer to resume persisted state.");
 		}
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded persisted state.");
-  }
-  struct RestStopwatchState rest_state;
-	if(persist_read_data(PERSIST_STATE, &rest_state, sizeof(rest_state)) != E_DOES_NOT_EXIST) {
-		rest_started = rest_state.rest_started;
-		rest_start_time = rest_state.rest_start_time;
-		rest_elapsed_time = rest_state.rest_elapsed_time;
-		pause_rest_time = rest_state.pause_rest_time;
-		update_rest_stopwatch();
-		if(started) {
+    if(rest_started) {
 			update_rest_timer = app_timer_register(100, handle_rest_timer, NULL);
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "Started timer to resume persisted state.");
 		}
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded persisted state.");
-	}
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded persisted state.");
+  }
 }
 
 void handle_deinit() {
@@ -206,22 +206,13 @@ void handle_deinit() {
 		.start_time = start_time,
 		.elapsed_time = elapsed_time,
 		.pause_time = pause_time,
-	};
-  struct RestStopwatchState rest_state = (struct RestStopwatchState){
-		.rest_started = rest_started,
+    .rest_started = rest_started,
 		.rest_start_time = rest_start_time,
 		.rest_elapsed_time = rest_elapsed_time,
 		.pause_rest_time = pause_rest_time,
 	};
 	status_t status = persist_write_data(PERSIST_STATE, &state, sizeof(state));
 	if(status < S_SUCCESS) {
-		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist state: %ld", status);
-	}
-	if(status < S_SUCCESS) {
-		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist laps: %ld", status);
-	}
-  status_t rest_status = persist_write_data(PERSIST_STATE, &rest_state, sizeof(rest_state));
-	if(rest_status < S_SUCCESS) {
 		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist state: %ld", status);
 	}
 	if(status < S_SUCCESS) {
@@ -295,6 +286,11 @@ void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
   if(rest_started) {
     stop_rest_stopwatch();
   }
+  if(rest_elapsed_time < 900) {
+    rest_start_time = 0;
+    rest_elapsed_time = 0;
+    update_rest_stopwatch();
+  }
 }
 
 void toggle_rest_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
@@ -312,8 +308,8 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
   if(busy_animating) return;
   bool is_running = started;
   bool rest_is_running = rest_started;
-  stop_stopwatch();
-  stop_rest_stopwatch();
+//   stop_stopwatch();
+//   stop_rest_stopwatch();
   start_time = 0;
   rest_start_time = 0;
   elapsed_time = 0;
@@ -403,26 +399,25 @@ void update_rest_stopwatch() {
   int rest_rSeconds = (2700 - (int)rest_elapsed_time) % 60;
   int rest_rMinutes = (2700 - (int)rest_elapsed_time) / 60 % 60;
   
-//   // When one hour of driving time remains, alert user with a short pulse
-//   if((int)elapsed_time == 12600) {
-//     vibes_short_pulse();
-//   }
-  
-//   // When thirty minutes of driving time remain, alert user with a short pulse
-//   if((int)elapsed_time == 14400) {
-//     vibes_short_pulse();
-//   }
+  // When fifteen minutes of rest time has passed, alert user with a short pulse
+  if((int)rest_elapsed_time == 900) {
+    vibes_short_pulse();
+    return;
+  }
 
-//   // When driver time runs out, stop timer and alert user with a short pulse
-//   if((int)elapsed_time == 16199) {
-//     vibes_short_pulse();
-//   }
+  // When rest time is completed, stop timer, alert user with a short pulse and reset drive timer
+  if((int)rest_elapsed_time == 2699) {
+    vibes_short_pulse();
+    return;
+  }
   
-//   if((int)rest_elapsed_time > 2700) {
-//     stop_stopwatch();
-//     vibes_cancel();
-//     return;
-//   }
+  if((int)rest_elapsed_time > 2700) {
+    stop_rest_stopwatch();
+    vibes_cancel();
+    elapsed_time = 0;
+    update_stopwatch();
+    return;
+  }
 
   // Create string from timer and remaining time for display
   snprintf(rest_time, 9, "%02d:%02d", rest_minutes, rest_seconds);
@@ -505,6 +500,7 @@ void handle_timer(void* data) {
 		update_timer = app_timer_register(100, handle_timer, NULL);
 	}
 	update_stopwatch();
+  update_rest_stopwatch();
 }
 
 void handle_rest_timer(void* data) {
@@ -514,11 +510,8 @@ void handle_rest_timer(void* data) {
 		update_rest_timer = app_timer_register(100, handle_rest_timer, NULL);
 	}
 	update_rest_stopwatch();
+  update_stopwatch();
 }
-
-// void handle_display_lap_times(ClickRecognizerRef recognizer, Window *window) {
-// //     show_laps();
-// }
 
 void config_provider(Window *window) {
 	window_single_click_subscribe(BUTTON_RUN, (ClickHandler)toggle_stopwatch_handler);
