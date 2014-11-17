@@ -37,14 +37,6 @@ static BitmapLayer* button_labels;
 static GFont large_font;
 static GFont small_font;
 
-// Lap time display
-// #define LAP_TIME_SIZE 5
-// static char lap_times[LAP_TIME_SIZE][11] = {"00:00:00.0", "00:01:00.0", "00:02:00.0", "00:03:00.0", "00:04:00.0"};
-// static TextLayer* lap_layers[LAP_TIME_SIZE]; // an extra temporary layer
-// static int next_lap_layer = 0;
-// // static int lap_time_count = 0;
-// static double last_lap_time = 0;
-
 // Actually keeping track of time
 static double elapsed_time = 0;
 static bool started = false;
@@ -52,21 +44,20 @@ static AppTimer* update_timer = NULL;
 static double start_time = 0;
 static double pause_time = 0;
 
+// Keeping track of rest time
+static double rest_elapsed_time = 0;
+static bool rest_started = false;
+static AppTimer* update_rest_timer = NULL;
+static double rest_start_time = 0;
+static double pause_rest_time = 0;
+
 // Global animation lock. As long as we only try doing things while
 // this is zero, we shouldn't crash the watch.
 static int busy_animating = 0;
 
-// Fonts
-// static GFont timer_font;
-// static GFont seconds_font;
-// static GFont laps_font;
-
 #define TIMER_UPDATE 1
-// #define FONT_BIG_TIME RESOURCE_ID_FONT_ROBOTO_LIGHT_28
-// #define FONT_SECONDS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_18
-// #define FONT_LAPS RESOURCE_ID_FONT_DEJAVU_SANS_SUBSET_22
-
-#define BUTTON_LAP BUTTON_ID_DOWN
+  
+#define BUTTON_REST BUTTON_ID_DOWN
 #define BUTTON_RUN BUTTON_ID_SELECT
 #define BUTTON_RESET BUTTON_ID_UP
 	
@@ -75,19 +66,28 @@ struct StopwatchState {
 	double elapsed_time;
 	double start_time;
 	double pause_time;
-	double last_lap_time;
 } __attribute__((__packed__));
 
-void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
+struct RestStopwatchState {
+	bool rest_started;
+	double rest_elapsed_time;
+	double rest_start_time;
+	double pause_rest_time;
+} __attribute__((__packed__));
+
+// void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void config_provider(Window *window);
 void handle_init();
 time_t time_seconds();
 void stop_stopwatch();
 void start_stopwatch();
 void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
+void toggle_rest_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void update_stopwatch();
+void update_rest_stopwatch();
 void handle_timer(void* data);
+void handle_rest_timer(void* data);
 int main();
 void draw_line(Layer *me, GContext* ctx);
 void save_lap_time(double seconds, bool animate);
@@ -107,8 +107,6 @@ void handle_init() {
   // Get our fonts
   large_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_34));
   small_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_22));
-  //     seconds_font = fonts_load_custom_font(resource_get_handle(FONT_SECONDS));
-  //     laps_font = fonts_load_custom_font(resource_get_handle(FONT_LAPS));
 
   // Root layer
   Layer *root_layer = window_get_root_layer(window);
@@ -158,14 +156,6 @@ void handle_init() {
   text_layer_set_text_alignment(remaining_rest_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)remaining_rest_layer);
 
-  // Milliseconds
-  //     seconds_time_layer = text_layer_create(GRect(96, 17, 49, 35));
-  //     text_layer_set_background_color(seconds_time_layer, GColorBlack);
-  //     text_layer_set_font(seconds_time_layer, seconds_font);
-  //     text_layer_set_text_color(seconds_time_layer, GColorWhite);
-  //     text_layer_set_text(seconds_time_layer, ".0");
-  //     layer_add_child(root_layer, (Layer*)seconds_time_layer);
-
   // Set up the lap time layers. These will be made visible later.
 //   for(int i = 0; i < LAP_TIME_SIZE; ++i) {
 //     lap_layers[i] = text_layer_create(GRect(-139, 52, 139, 30));
@@ -181,9 +171,6 @@ void handle_init() {
 	button_labels = bitmap_layer_create(GRect(130, 10, 14, 136));
 	bitmap_layer_set_bitmap(button_labels, button_bitmap);
   layer_add_child(root_layer, (Layer*)button_labels);
-
-  // Set up lap time stuff, too.
-//   init_lap_window();
 	
 	struct StopwatchState state;
 	if(persist_read_data(PERSIST_STATE, &state, sizeof(state)) != E_DOES_NOT_EXIST) {
@@ -191,19 +178,26 @@ void handle_init() {
 		start_time = state.start_time;
 		elapsed_time = state.elapsed_time;
 		pause_time = state.pause_time;
-// 		last_lap_time = state.last_lap_time;
 		update_stopwatch();
 		if(started) {
 			update_timer = app_timer_register(100, handle_timer, NULL);
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "Started timer to resume persisted state.");
 		}
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded persisted state.");
+  }
+  struct RestStopwatchState rest_state;
+	if(persist_read_data(PERSIST_STATE, &rest_state, sizeof(rest_state)) != E_DOES_NOT_EXIST) {
+		rest_started = rest_state.rest_started;
+		rest_start_time = rest_state.rest_start_time;
+		rest_elapsed_time = rest_state.rest_elapsed_time;
+		pause_rest_time = rest_state.pause_rest_time;
+		update_rest_stopwatch();
+		if(started) {
+			update_rest_timer = app_timer_register(100, handle_rest_timer, NULL);
+			APP_LOG(APP_LOG_LEVEL_DEBUG, "Started timer to resume persisted state.");
+		}
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Loaded persisted state.");
 	}
-// 	restore_laps((LapRestoredCallback)lap_restored);
-}
-
-void lap_restored(double time) {
-	save_lap_time(time, false);
 }
 
 void handle_deinit() {
@@ -212,33 +206,37 @@ void handle_deinit() {
 		.start_time = start_time,
 		.elapsed_time = elapsed_time,
 		.pause_time = pause_time,
-// 		.last_lap_time = last_lap_time
+	};
+  struct RestStopwatchState rest_state = (struct RestStopwatchState){
+		.rest_started = rest_started,
+		.rest_start_time = rest_start_time,
+		.rest_elapsed_time = rest_elapsed_time,
+		.pause_rest_time = pause_rest_time,
 	};
 	status_t status = persist_write_data(PERSIST_STATE, &state, sizeof(state));
 	if(status < S_SUCCESS) {
 		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist state: %ld", status);
 	}
-// 	status = persist_laps();
 	if(status < S_SUCCESS) {
 		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist laps: %ld", status);
 	}
-// 	deinit_lap_window();
+  status_t rest_status = persist_write_data(PERSIST_STATE, &rest_state, sizeof(rest_state));
+	if(rest_status < S_SUCCESS) {
+		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist state: %ld", status);
+	}
+	if(status < S_SUCCESS) {
+		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist laps: %ld", status);
+	}
 	
 	bitmap_layer_destroy(button_labels);
 	gbitmap_destroy(button_bitmap);
-// 	for(int i = 0; i < LAP_TIME_SIZE; ++i) {
-// 		text_layer_destroy(lap_layers[i]);
-// 	}
 	layer_destroy(line_layer);
-// 	text_layer_destroy(seconds_time_layer);
 	text_layer_destroy(big_time_layer);
   text_layer_destroy(remaining_drive_layer);
   text_layer_destroy(big_rest_layer);
   text_layer_destroy(remaining_rest_layer);
 	fonts_unload_custom_font(large_font);
   fonts_unload_custom_font(small_font);
-// 	fonts_unload_custom_font(seconds_font);
-// 	fonts_unload_custom_font(laps_font);
 	window_destroy(window);
 }
 
@@ -257,6 +255,15 @@ void stop_stopwatch() {
   }
 }
 
+void stop_rest_stopwatch() {
+  rest_started = false;
+	pause_rest_time = float_time_ms();
+  if(update_rest_timer != NULL) {
+    app_timer_cancel(update_rest_timer);
+    update_rest_timer = NULL;
+  }
+}
+
 void start_stopwatch() {
   started = true;
   if(start_time == 0) {
@@ -268,23 +275,53 @@ void start_stopwatch() {
   update_timer = app_timer_register(100, handle_timer, NULL);
 }
 
+void start_rest_stopwatch() {
+  rest_started = true;
+  if(rest_start_time == 0) {
+		rest_start_time = float_time_ms();
+	} else if(pause_rest_time != 0) {
+		double rest_interval = float_time_ms() - pause_rest_time;
+		rest_start_time += rest_interval;
+	}
+  update_rest_timer = app_timer_register(100, handle_rest_timer, NULL);
+}
+
 void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
   if(started) {
     stop_stopwatch();
   } else {
     start_stopwatch();
   }
+  if(rest_started) {
+    stop_rest_stopwatch();
+  }
+}
+
+void toggle_rest_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
+  if(rest_started) {
+    stop_rest_stopwatch();
+  } else {
+    start_rest_stopwatch();
+  }
+  if(started) {
+    stop_stopwatch();
+  }
 }
 
 void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
   if(busy_animating) return;
   bool is_running = started;
+  bool rest_is_running = rest_started;
   stop_stopwatch();
+  stop_rest_stopwatch();
   start_time = 0;
-  //     last_lap_time = 0;
+  rest_start_time = 0;
   elapsed_time = 0;
-  if(is_running) start_stopwatch();
+  rest_elapsed_time = 0;
+  if(is_running) stop_stopwatch();
+  if(rest_is_running) stop_rest_stopwatch();
   update_stopwatch();
+  update_rest_stopwatch();
 }
 
     // Animate all the laps away.
@@ -307,6 +344,7 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
 //     save_lap_time(t, true);
 // }
 
+// Update timer display
 void update_stopwatch() {
   
   static char big_time[] = "0:00:00";
@@ -320,19 +358,22 @@ void update_stopwatch() {
   int rMinutes = (16200 - (int)elapsed_time) / 60 % 60;
   int rHours = (16200 - (int)elapsed_time) / 3600;
   
-  // When one hour of driving time remains, alert user with one small pulse
+  // When one hour of driving time remains, alert user with a short pulse
   if((int)elapsed_time == 12600) {
     vibes_short_pulse();
+    return;
   }
   
-  // When thirty minites of driving time remain, alert user with two small pulses
+  // When thirty minutes of driving time remain, alert user with a short pulse
   if((int)elapsed_time == 14400) {
     vibes_short_pulse();
+    return;
   }
 
-  // When driver time runs out, stop timer and long vibrate to alert user
+  // When driver time runs out, stop timer and alert user with a short pulse
   if((int)elapsed_time == 16199) {
     vibes_short_pulse();
+    return;
   }
   
   if((int)elapsed_time > 16200) {
@@ -350,26 +391,68 @@ void update_stopwatch() {
   text_layer_set_text(remaining_drive_layer, remaining_drive);
 }
 
+// Update rest display
+void update_rest_stopwatch() {
+  
+  static char rest_time[] = "00:00";
+  static char remaining_rest[] = "00:00";
+
+  // Now convert to hours/minutes/seconds.
+  int rest_seconds = (int)rest_elapsed_time % 60;
+  int rest_minutes = (int)rest_elapsed_time / 60 % 60;
+  int rest_rSeconds = (2700 - (int)rest_elapsed_time) % 60;
+  int rest_rMinutes = (2700 - (int)rest_elapsed_time) / 60 % 60;
+  
+//   // When one hour of driving time remains, alert user with a short pulse
+//   if((int)elapsed_time == 12600) {
+//     vibes_short_pulse();
+//   }
+  
+//   // When thirty minutes of driving time remain, alert user with a short pulse
+//   if((int)elapsed_time == 14400) {
+//     vibes_short_pulse();
+//   }
+
+//   // When driver time runs out, stop timer and alert user with a short pulse
+//   if((int)elapsed_time == 16199) {
+//     vibes_short_pulse();
+//   }
+  
+//   if((int)rest_elapsed_time > 2700) {
+//     stop_stopwatch();
+//     vibes_cancel();
+//     return;
+//   }
+
+  // Create string from timer and remaining time for display
+  snprintf(rest_time, 9, "%02d:%02d", rest_minutes, rest_seconds);
+  snprintf(remaining_rest, 9, "%02d:%02d", rest_rMinutes, rest_rSeconds);
+
+  // Now draw the strings.
+  text_layer_set_text(big_rest_layer, rest_time);
+  text_layer_set_text(remaining_rest_layer, remaining_rest);
+}
+
 void animation_stopped(Animation *animation, void *data) {
 	property_animation_destroy((PropertyAnimation*)animation);
     --busy_animating;
 }
 
-void shift_lap_layer(PropertyAnimation** animation, Layer* layer, GRect* target, int distance_multiplier) {
-    GRect origin = layer_get_frame(layer);
-    *target = origin;
-    target->origin.y += target->size.h * distance_multiplier;
-	if(animation != NULL) {
-		*animation = property_animation_create_layer_frame(layer, NULL, target);
-		animation_set_duration((Animation*)*animation, 250);
-		animation_set_curve((Animation*)*animation, AnimationCurveLinear);
-		animation_set_handlers((Animation*)*animation, (AnimationHandlers){
-			.stopped = (AnimationStoppedHandler)animation_stopped
-		}, NULL);
-	} else {
-		layer_set_frame(layer, *target);
-	}
-}
+// void shift_lap_layer(PropertyAnimation** animation, Layer* layer, GRect* target, int distance_multiplier) {
+//     GRect origin = layer_get_frame(layer);
+//     *target = origin;
+//     target->origin.y += target->size.h * distance_multiplier;
+// 	if(animation != NULL) {
+// 		*animation = property_animation_create_layer_frame(layer, NULL, target);
+// 		animation_set_duration((Animation*)*animation, 250);
+// 		animation_set_curve((Animation*)*animation, AnimationCurveLinear);
+// 		animation_set_handlers((Animation*)*animation, (AnimationHandlers){
+// 			.stopped = (AnimationStoppedHandler)animation_stopped
+// 		}, NULL);
+// 	} else {
+// 		layer_set_frame(layer, *target);
+// 	}
+// }
 
 // void save_lap_time(double lap_time, bool animate) {
 //     if(busy_animating && animate) return;
@@ -424,14 +507,23 @@ void handle_timer(void* data) {
 	update_stopwatch();
 }
 
-void handle_display_lap_times(ClickRecognizerRef recognizer, Window *window) {
-//     show_laps();
+void handle_rest_timer(void* data) {
+	if(rest_started) {
+		double rest_now = float_time_ms();
+		rest_elapsed_time = rest_now - rest_start_time;
+		update_rest_timer = app_timer_register(100, handle_rest_timer, NULL);
+	}
+	update_rest_stopwatch();
 }
+
+// void handle_display_lap_times(ClickRecognizerRef recognizer, Window *window) {
+// //     show_laps();
+// }
 
 void config_provider(Window *window) {
 	window_single_click_subscribe(BUTTON_RUN, (ClickHandler)toggle_stopwatch_handler);
 	window_single_click_subscribe(BUTTON_RESET, (ClickHandler)reset_stopwatch_handler);
-// 	window_single_click_subscribe(BUTTON_LAP, (ClickHandler)lap_time_handler);
+	window_single_click_subscribe(BUTTON_REST, (ClickHandler)toggle_rest_stopwatch_handler);
 // 	window_long_click_subscribe(BUTTON_LAP, 700, (ClickHandler)handle_display_lap_times, NULL);
 }
 
