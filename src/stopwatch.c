@@ -62,9 +62,9 @@ static int busy_animating = 0;
 
 #define TIMER_UPDATE 1
   
-#define BUTTON_REST BUTTON_ID_DOWN
-#define BUTTON_RUN BUTTON_ID_SELECT
-#define BUTTON_RESET BUTTON_ID_UP
+#define BUTTON_REST BUTTON_ID_SELECT
+#define BUTTON_RUN BUTTON_ID_UP
+#define BUTTON_RESET BUTTON_ID_DOWN
 	
 struct StopwatchState {
 	bool started;
