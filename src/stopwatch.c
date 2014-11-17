@@ -297,6 +297,19 @@ void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
       update_rest_stopwatch();
     }
   }
+  if(rest_elapsed_time >= 2700) {
+    if(busy_animating) return;
+    bool is_running = started;
+    bool rest_is_running = rest_started;
+    start_time = 0;
+    rest_start_time = 0;
+    elapsed_time = 0;
+    rest_elapsed_time = 0;
+    if(is_running) stop_stopwatch();
+    if(rest_is_running) stop_rest_stopwatch();
+    update_stopwatch();
+    update_rest_stopwatch();
+  }
 }
 
 void toggle_rest_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
