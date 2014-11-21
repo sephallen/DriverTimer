@@ -27,7 +27,7 @@
 
 #include <pebble.h>
 
-#include "common.h"
+// #include "common.h"
 
 static Window* window;
 
@@ -65,10 +65,18 @@ static double pause_rest_time = 0;
 static int busy_animating = 0;
 
 #define TIMER_UPDATE 1
+#define PERSIST_STATE 1
   
 #define BUTTON_REST BUTTON_ID_SELECT
 #define BUTTON_RUN BUTTON_ID_UP
 #define BUTTON_RESET BUTTON_ID_DOWN
+  
+double float_time_ms() {
+	time_t seconds;
+	uint16_t milliseconds;
+	time_ms(&seconds, &milliseconds);
+	return (double)seconds + ((double)milliseconds / 1000.0);
+}
 	
 struct StopwatchState {
 	bool started;

@@ -24,11 +24,6 @@
                 "type": "png"
             },
             {
-                "file": "images/buttons.png",
-                "name": "IMAGE_BUTTON_LABELS",
-                "type": "png"
-            },
-            {
                 "file": "images/drivertimer.png",
                 "menuIcon": true,
                 "name": "IMAGE_MENU_ICON",
