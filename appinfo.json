@@ -9,6 +9,21 @@
     "resources": {
         "media": [
             {
+                "file": "images/actionbarreset.png",
+                "name": "IMAGE_RESET_BUTTON",
+                "type": "png"
+            },
+            {
+                "file": "images/actionbardrive.png",
+                "name": "IMAGE_DRIVE_BUTTON",
+                "type": "png"
+            },
+            {
+                "file": "images/actionbarrest.png",
+                "name": "IMAGE_REST_BUTTON",
+                "type": "png"
+            },
+            {
                 "file": "images/buttons.png",
                 "name": "IMAGE_BUTTON_LABELS",
                 "type": "png"
@@ -21,12 +36,14 @@
             },
             {
                 "characterRegex": "[0-9:. ]",
+                "compatibility": "2.7",
                 "file": "fonts/roboto-light.ttf",
                 "name": "FONT_ROBOTO_LIGHT_22",
                 "type": "font"
             },
             {
                 "characterRegex": "[0-9:. ]",
+                "compatibility": "2.7",
                 "file": "fonts/roboto-light.ttf",
                 "name": "FONT_ROBOTO_LIGHT_34",
                 "type": "font"

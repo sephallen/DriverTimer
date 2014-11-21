@@ -36,11 +36,15 @@ static TextLayer* big_time_layer;
 static TextLayer* remaining_drive_layer;
 static TextLayer* big_rest_layer;
 static TextLayer* remaining_rest_layer;
-static Layer* line_layer;
-static GBitmap* button_bitmap;
-static BitmapLayer* button_labels;
+// static Layer* line_layer;
+// static GBitmap* button_bitmap;
+// static BitmapLayer* button_labels;
 static GFont large_font;
 static GFont small_font;
+ActionBarLayer *action_bar;
+static GBitmap* drive_button;
+static GBitmap* rest_button;
+static GBitmap* reset_button;
 
 // Actually keeping track of time
 static double elapsed_time = 0;
@@ -77,7 +81,6 @@ struct StopwatchState {
 	double pause_rest_time;
 } __attribute__((__packed__));
 
-// void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window);
 void config_provider(Window *window);
 void handle_init();
 time_t time_seconds();
@@ -91,11 +94,11 @@ void update_rest_stopwatch();
 void handle_timer(void* data);
 void handle_rest_timer(void* data);
 int main();
-void draw_line(Layer *me, GContext* ctx);
-void save_lap_time(double seconds, bool animate);
-void lap_time_handler(ClickRecognizerRef recognizer, Window *window);
-void shift_lap_layer(PropertyAnimation** animation, Layer* layer, GRect* target, int distance_multiplier);
-void lap_restored(double time);
+// void draw_line(Layer *me, GContext* ctx);
+// void save_lap_time(double seconds, bool animate);
+// void lap_time_handler(ClickRecognizerRef recognizer, Window *window);
+// void shift_lap_layer(PropertyAnimation** animation, Layer* layer, GRect* target, int distance_multiplier);
+// void lap_restored(double time);
 
 void handle_init() {
 	window = window_create();
@@ -134,12 +137,12 @@ void handle_init() {
   layer_add_child(root_layer, (Layer*)remaining_drive_layer);
   
   // Draw our nice line.
-  line_layer = layer_create(GRect(0, 71, 144, 1));
-  layer_set_update_proc(line_layer, draw_line);
-  layer_add_child(root_layer, line_layer);
+//   line_layer = layer_create(GRect(0, 71, 144, 1));
+//   layer_set_update_proc(line_layer, draw_line);
+//   layer_add_child(root_layer, line_layer);
   
   // Set up the rest timer.
-  big_rest_layer = text_layer_create(GRect(0, 72, 144, 35));
+  big_rest_layer = text_layer_create(GRect(0, 71, 144, 35));
   text_layer_set_background_color(big_rest_layer, GColorClear);
 //   text_layer_set_font(big_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_font(big_rest_layer, large_font);
@@ -149,7 +152,7 @@ void handle_init() {
   layer_add_child(root_layer, (Layer*)big_rest_layer);
   
   // Set up remaining rest time layer
-  remaining_rest_layer = text_layer_create(GRect(0, 107, 144, 35));
+  remaining_rest_layer = text_layer_create(GRect(0, 106, 144, 35));
   text_layer_set_background_color(remaining_rest_layer, GColorClear);
 //   text_layer_set_font(remaining_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_font(remaining_rest_layer, small_font);
@@ -169,11 +172,27 @@ void handle_init() {
 //   }
 
   // Add some button labels
-	button_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUTTON_LABELS);
-	button_labels = bitmap_layer_create(GRect(130, 10, 14, 136));
-	bitmap_layer_set_bitmap(button_labels, button_bitmap);
-  layer_add_child(root_layer, (Layer*)button_labels);
-	
+// 	button_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BUTTON_LABELS);
+// 	button_labels = bitmap_layer_create(GRect(130, 10, 14, 136));
+// 	bitmap_layer_set_bitmap(button_labels, button_bitmap);
+//   layer_add_child(root_layer, (Layer*)button_labels);
+  
+  // Initialize the action bar:
+  action_bar = action_bar_layer_create();
+  // Associate the action bar with the window:
+  action_bar_layer_add_to_window(action_bar, window);
+  // Set the click config provider:
+  action_bar_layer_set_click_config_provider(action_bar, (ClickConfigProvider) config_provider);
+  // Set action bar background colour
+  action_bar_layer_set_background_color(action_bar, GColorWhite);
+  // Set button icons
+  drive_button = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DRIVE_BUTTON);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_UP, drive_button);
+  rest_button = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_REST_BUTTON);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_SELECT, rest_button);
+  reset_button = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RESET_BUTTON);
+  action_bar_layer_set_icon(action_bar, BUTTON_ID_DOWN, reset_button);
+  
 	struct StopwatchState state;
   if(persist_read_data(PERSIST_STATE, &state, sizeof(state)) != E_DOES_NOT_EXIST) {
 		started = state.started;
@@ -217,9 +236,13 @@ void handle_deinit() {
 		APP_LOG(APP_LOG_LEVEL_WARNING, "Failed to persist laps: %ld", status);
 	}
 	
-	bitmap_layer_destroy(button_labels);
-	gbitmap_destroy(button_bitmap);
-	layer_destroy(line_layer);
+  action_bar_layer_destroy(action_bar);
+  gbitmap_destroy(drive_button);
+  gbitmap_destroy(rest_button);
+  gbitmap_destroy(reset_button);
+// 	bitmap_layer_destroy(button_labels);
+// 	gbitmap_destroy(button_bitmap);
+// 	layer_destroy(line_layer);
 	text_layer_destroy(big_time_layer);
   text_layer_destroy(remaining_drive_layer);
   text_layer_destroy(big_rest_layer);
@@ -229,11 +252,11 @@ void handle_deinit() {
 	window_destroy(window);
 }
 
-void draw_line(Layer *me, GContext* ctx) {
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_draw_line(ctx, GPoint(0, 0), GPoint(140, 0));
-  graphics_draw_line(ctx, GPoint(0, 1), GPoint(140, 1));
-}
+// void draw_line(Layer *me, GContext* ctx) {
+//   graphics_context_set_stroke_color(ctx, GColorWhite);
+//   graphics_draw_line(ctx, GPoint(0, 0), GPoint(140, 0));
+//   graphics_draw_line(ctx, GPoint(0, 1), GPoint(140, 1));
+// }
 
 void stop_stopwatch() {
   started = false;
