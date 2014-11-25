@@ -32,15 +32,20 @@
 static Window* window;
 
 // Main display
+static TextLayer* drive_time_label_layer;
 static TextLayer* big_time_layer;
+static TextLayer* drive_remaining_label_layer;
 static TextLayer* remaining_drive_layer;
+static TextLayer* rest_time_label_layer;
 static TextLayer* big_rest_layer;
+static TextLayer* rest_remaining_label_layer;
 static TextLayer* remaining_rest_layer;
 // static Layer* line_layer;
 // static GBitmap* button_bitmap;
 // static BitmapLayer* button_labels;
 static GFont large_font;
 static GFont small_font;
+static GFont label_font;
 ActionBarLayer *action_bar;
 static GBitmap* drive_button;
 static GBitmap* rest_button;
@@ -120,12 +125,22 @@ void handle_init() {
   // Get our fonts
   large_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_34));
   small_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_22));
+  label_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_12));
 
   // Root layer
   Layer *root_layer = window_get_root_layer(window);
 
+  // Set up drive time label
+  drive_time_label_layer = text_layer_create(GRect(4, 2, 124, 12));
+  text_layer_set_background_color(drive_time_label_layer, GColorClear);
+  text_layer_set_font(drive_time_label_layer, label_font);
+  text_layer_set_text_color(drive_time_label_layer, GColorWhite);
+  text_layer_set_text(drive_time_label_layer, "Drive time");
+  text_layer_set_text_alignment(drive_time_label_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)drive_time_label_layer);
+  
   // Set up the big timer.
-  big_time_layer = text_layer_create(GRect(0, 0, 144, 35));
+  big_time_layer = text_layer_create(GRect(4, 8, 124, 34));
   text_layer_set_background_color(big_time_layer, GColorClear);
 //   text_layer_set_font(big_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_font(big_time_layer, large_font);
@@ -134,8 +149,17 @@ void handle_init() {
   text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)big_time_layer);
   
+  // Set up drive remaining label
+  drive_remaining_label_layer = text_layer_create(GRect(4, 43, 124, 15));
+  text_layer_set_background_color(drive_remaining_label_layer, GColorClear);
+  text_layer_set_font(drive_remaining_label_layer, label_font);
+  text_layer_set_text_color(drive_remaining_label_layer, GColorWhite);
+  text_layer_set_text(drive_remaining_label_layer, "Remaining");
+  text_layer_set_text_alignment(drive_remaining_label_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)drive_remaining_label_layer);
+  
   // Set up remaining drive time layer
-  remaining_drive_layer = text_layer_create(GRect(0, 36, 144, 35));
+  remaining_drive_layer = text_layer_create(GRect(4, 53, 124, 22));
   text_layer_set_background_color(remaining_drive_layer, GColorClear);
 //   text_layer_set_font(remaining_drive_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_font(remaining_drive_layer, small_font);
@@ -149,8 +173,17 @@ void handle_init() {
 //   layer_set_update_proc(line_layer, draw_line);
 //   layer_add_child(root_layer, line_layer);
   
+  // Set up rest time label
+  rest_time_label_layer = text_layer_create(GRect(4, 75, 124, 12));
+  text_layer_set_background_color(rest_time_label_layer, GColorClear);
+  text_layer_set_font(rest_time_label_layer, label_font);
+  text_layer_set_text_color(rest_time_label_layer, GColorWhite);
+  text_layer_set_text(rest_time_label_layer, "Rest time");
+  text_layer_set_text_alignment(rest_time_label_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)rest_time_label_layer);
+  
   // Set up the rest timer.
-  big_rest_layer = text_layer_create(GRect(0, 71, 144, 35));
+  big_rest_layer = text_layer_create(GRect(4, 81, 124, 34));
   text_layer_set_background_color(big_rest_layer, GColorClear);
 //   text_layer_set_font(big_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_font(big_rest_layer, large_font);
@@ -159,8 +192,17 @@ void handle_init() {
   text_layer_set_text_alignment(big_rest_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)big_rest_layer);
   
+  // Set up rest remaining label
+  rest_remaining_label_layer = text_layer_create(GRect(4, 115, 124, 15));
+  text_layer_set_background_color(rest_remaining_label_layer, GColorClear);
+  text_layer_set_font(rest_remaining_label_layer, label_font);
+  text_layer_set_text_color(rest_remaining_label_layer, GColorWhite);
+  text_layer_set_text(rest_remaining_label_layer, "Remaining");
+  text_layer_set_text_alignment(rest_remaining_label_layer, GTextAlignmentLeft);
+  layer_add_child(root_layer, (Layer*)rest_remaining_label_layer);
+  
   // Set up remaining rest time layer
-  remaining_rest_layer = text_layer_create(GRect(0, 106, 144, 35));
+  remaining_rest_layer = text_layer_create(GRect(4, 125, 124, 22));
   text_layer_set_background_color(remaining_rest_layer, GColorClear);
 //   text_layer_set_font(remaining_rest_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_font(remaining_rest_layer, small_font);
@@ -462,7 +504,7 @@ void update_rest_stopwatch() {
   
   if((int)rest_elapsed_time > 2700) {
     stop_rest_stopwatch();
-    vibes_cancel();
+//     vibes_cancel();
     start_time = 0;
     elapsed_time = 0;
     update_stopwatch();
