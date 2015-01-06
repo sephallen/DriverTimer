@@ -27,8 +27,6 @@
 
 #include <pebble.h>
 
-// #include "common.h"
-
 static Window* window;
 static Window* reset_confirm;
 
@@ -49,6 +47,7 @@ ActionBarLayer *action_bar;
 static GBitmap* drive_button;
 static GBitmap* rest_button;
 static GBitmap* reset_button;
+static GBitmap* confirm_button;
 
 // Reset confirmation display
 ActionBarLayer *action_bar_reset;
@@ -66,10 +65,6 @@ static bool rest_started = false;
 static AppTimer* update_rest_timer = NULL;
 static double rest_start_time = 0;
 static double pause_rest_time = 0;
-
-// Global animation lock. As long as we only try doing things while
-// this is zero, we shouldn't crash the watch.
-// static int busy_animating = 0;
 
 #define TIMER_UPDATE 1
 #define PERSIST_STATE 1
@@ -117,9 +112,6 @@ void handle_init() {
   window_stack_push(window, true);
   window_set_background_color(window, GColorBlack);
   window_set_fullscreen(window, false);
-
-  // Arrange for user input.
-//   window_set_click_config_provider(window, (ClickConfigProvider) config_provider);
 
   // Get our fonts
   large_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ROBOTO_LIGHT_34));
@@ -265,9 +257,8 @@ void handle_init() {
   // Set action bar background colour
   action_bar_layer_set_background_color(action_bar_reset, GColorWhite);
   // Set button icons
-  drive_button = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_DRIVE_BUTTON);
-  action_bar_layer_set_icon(action_bar_reset, BUTTON_ID_UP, drive_button);
-  reset_button = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_RESET_BUTTON);
+  confirm_button = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_CONFIRM_BUTTON);
+  action_bar_layer_set_icon(action_bar_reset, BUTTON_ID_UP, confirm_button);
   action_bar_layer_set_icon(action_bar_reset, BUTTON_ID_DOWN, reset_button);
 }
 
@@ -371,7 +362,6 @@ void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
     }
   }
   if(rest_elapsed_time >= 2700) {
-//     if(busy_animating) return;
     bool is_running = started;
     bool rest_is_running = rest_started;
     start_time = 0;
@@ -402,7 +392,6 @@ void reset_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
 }
 
 void accept_reset_handler(ClickRecognizerRef recognizer, Window *reset_confirm) {
-//   if(busy_animating) return;
   bool is_running = started;
   bool rest_is_running = rest_started;
   start_time = 0;
@@ -493,7 +482,6 @@ void update_rest_stopwatch() {
   
   if((int)rest_elapsed_time > 2700) {
     stop_rest_stopwatch();
-//     vibes_cancel();
     start_time = 0;
     elapsed_time = 0;
     update_stopwatch();
@@ -508,11 +496,6 @@ void update_rest_stopwatch() {
   text_layer_set_text(big_rest_layer, rest_time);
   text_layer_set_text(remaining_rest_layer, remaining_rest);
 }
-
-// void animation_stopped(Animation *animation, void *data) {
-// 	property_animation_destroy((PropertyAnimation*)animation);
-//     --busy_animating;
-// }
 
 void handle_timer(void* data) {
 	if(started) {
