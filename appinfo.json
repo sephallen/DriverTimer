@@ -30,23 +30,21 @@
                 "type": "png"
             },
             {
-                "characterRegex": "[DRrivemangst]",
+                "characterRegex": "[Restaltimr0-9:.? ]",
                 "file": "fonts/roboto-light.ttf",
-                "name": "FONT_ROBOTO_LIGHT_12",
+                "name": "FONT_ROBOTO_LIGHT_22",
                 "type": "font"
             },
             {
                 "characterRegex": "[0-9:. ]",
-                "compatibility": "2.7",
                 "file": "fonts/roboto-light.ttf",
                 "name": "FONT_ROBOTO_LIGHT_34",
                 "type": "font"
             },
             {
-                "characterRegex": "[0-9:. ]",
-                "compatibility": "2.7",
+                "characterRegex": "[DRrivemangst]",
                 "file": "fonts/roboto-light.ttf",
-                "name": "FONT_ROBOTO_LIGHT_22",
+                "name": "FONT_ROBOTO_LIGHT_12",
                 "type": "font"
             }
         ]
