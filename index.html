@@ -1,47 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Driver Timer Configuration</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Driver Timer Settings</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+
   </head>
   <body>
-    <h1>Pebble Config Tutorial</h1>
-    <p>Choose watchapp settings</p>
- 
-    <p>Invert watchapp:
-    <select id="seconds_select">
-      <option value="off">Off</option>
-      <option value="on">On</option>
-    </select>
-    </p>
- 
-    <p>
-    <button id="save_button">Save</button>
-    </p>
-    
+
+    <div class="container-fluid">
+
+      <h1>Driver Timer Settings</h1>
+
+      <div class="row">
+
+        <div class="col-xs-12">
+
+          <h2>Battery saver mode</h2>
+          <div class="radio_seconds">
+            <label>
+              <input type="checkbox" name="seconds_check" id="seconds_select" value="seconds_value">
+              Turning this on removes the seconds display to increase battery life
+            </label>
+          </div>
+
+          <button id="save_button">Save</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    </div>
+
+    <!-- jQuery (recessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script>
       //Setup to allow easy adding more options later
       function saveOptions() {
-        var invertSelect = document.getElementById("seconds_select");
-     
+        var secondsSelect = document.getElementById("seconds_select");
+
         var options = {
-          "seconds": invertSelect.options[invertSelect.selectedIndex].value
+          "seconds": secondsSelect.value
         }
-         
+
         return options;
       };
-     
+
       var submitButton = document.getElementById("save_button");
-      submitButton.addEventListener("click", 
-        function() {
-          console.log("Submit");
-     
-          var options = saveOptions();
-          var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));
-           
-          document.location = location;
-        }, 
+      submitButton.addEventListener("click",
+      function() {
+        console.log("Submit");
+
+        var options = saveOptions();
+        var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));
+
+        document.location = location;
+      },
       false);
     </script>
-
   </body>
 </html>
