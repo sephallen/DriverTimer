@@ -1,7 +1,9 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "KEY_BATTERY": 0
+    },
     "capabilities": [
-        ""
+        "configurable"
     ],
     "companyName": "Joseph Allen",
     "longName": "Driver Timer",
@@ -9,35 +11,9 @@
     "resources": {
         "media": [
             {
-                "file": "images/actionbardrive.png",
-                "name": "IMAGE_DRIVE_BUTTON",
-                "type": "png"
-            },
-            {
-                "file": "images/actionbarrest.png",
-                "name": "IMAGE_REST_BUTTON",
-                "type": "png"
-            },
-            {
-                "file": "images/actionbarconfirm.png",
-                "name": "IMAGE_CONFIRM_BUTTON",
-                "type": "png"
-            },
-            {
-                "file": "images/actionbarreset.png",
-                "name": "IMAGE_RESET_BUTTON",
-                "type": "png"
-            },
-            {
-                "file": "images/drivertimer.png",
-                "menuIcon": true,
-                "name": "IMAGE_MENU_ICON",
-                "type": "png"
-            },
-            {
-                "characterRegex": "[Restaltimr0-9:.? ]",
+                "characterRegex": "[DRrivemangst]",
                 "file": "fonts/roboto-light.ttf",
-                "name": "FONT_ROBOTO_LIGHT_22",
+                "name": "FONT_ROBOTO_LIGHT_12",
                 "type": "font"
             },
             {
@@ -47,10 +23,36 @@
                 "type": "font"
             },
             {
-                "characterRegex": "[DRrivemangst]",
+                "characterRegex": "[Restaltimr0-9:.? ]",
                 "file": "fonts/roboto-light.ttf",
-                "name": "FONT_ROBOTO_LIGHT_12",
+                "name": "FONT_ROBOTO_LIGHT_22",
                 "type": "font"
+            },
+            {
+                "file": "images/drivertimer.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/actionbarreset.png",
+                "name": "IMAGE_RESET_BUTTON",
+                "type": "png"
+            },
+            {
+                "file": "images/actionbarconfirm.png",
+                "name": "IMAGE_CONFIRM_BUTTON",
+                "type": "png"
+            },
+            {
+                "file": "images/actionbarrest.png",
+                "name": "IMAGE_REST_BUTTON",
+                "type": "png"
+            },
+            {
+                "file": "images/actionbardrive.png",
+                "name": "IMAGE_DRIVE_BUTTON",
+                "type": "png"
             }
         ]
     },

@@ -73,6 +73,9 @@ static double pause_rest_time = 0;
 #define BUTTON_RUN BUTTON_ID_UP
 #define BUTTON_RESET BUTTON_ID_DOWN
   
+// Settings Keys
+#define KEY_BATTERY 0
+  
 double float_time_ms() {
 	time_t seconds;
 	uint16_t milliseconds;
@@ -107,7 +110,37 @@ void handle_timer(void* data);
 void handle_rest_timer(void* data);
 int main();
 
+static void in_recv_handler(DictionaryIterator *iterator, void *context)
+{
+  //Get Tuple
+  Tuple *t = dict_read_first(iterator);
+  if(t)
+  {
+    switch(t->key)
+    {
+    case KEY_BATTERY:
+      //It's the KEY_BATTERY key
+      if(strcmp(t->value->cstring, "off") == 0)
+      {
+        //Set and save as battery save mode off
+        persist_write_bool(KEY_BATTERY, true);
+      }
+      else if(strcmp(t->value->cstring, "on") == 0)
+      {
+        //Set and save as battery save mode on
+        persist_write_bool(KEY_BATTERY, false);
+      }
+      break;
+    }
+  }
+}
+
 void handle_init() {
+  
+  // Receiving and loading settins data
+  app_message_register_inbox_received((AppMessageInboxReceived) in_recv_handler);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  
 	window = window_create();
   window_stack_push(window, true);
   window_set_background_color(window, GColorBlack);
@@ -135,7 +168,11 @@ void handle_init() {
   text_layer_set_background_color(big_time_layer, GColorClear);
   text_layer_set_font(big_time_layer, large_font);
   text_layer_set_text_color(big_time_layer, GColorWhite);
-  text_layer_set_text(big_time_layer, "0:00:00");
+  if(persist_read_bool(KEY_BATTERY) == false) {
+    text_layer_set_text(big_time_layer, "0:00");
+  } else {
+    text_layer_set_text(big_time_layer, "0:00:00");
+  }
   text_layer_set_text_alignment(big_time_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)big_time_layer);
   
@@ -153,7 +190,11 @@ void handle_init() {
   text_layer_set_background_color(remaining_drive_layer, GColorClear);
   text_layer_set_font(remaining_drive_layer, small_font);
   text_layer_set_text_color(remaining_drive_layer, GColorWhite);
-  text_layer_set_text(remaining_drive_layer, "4:30:00");
+  if(persist_read_bool(KEY_BATTERY) == false) {
+    text_layer_set_text(remaining_drive_layer, "4:30");
+  } else {
+    text_layer_set_text(remaining_drive_layer, "4:30:00");
+  }
   text_layer_set_text_alignment(remaining_drive_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)remaining_drive_layer);
   
@@ -171,7 +212,11 @@ void handle_init() {
   text_layer_set_background_color(big_rest_layer, GColorClear);
   text_layer_set_font(big_rest_layer, large_font);
   text_layer_set_text_color(big_rest_layer, GColorWhite);
-  text_layer_set_text(big_rest_layer, "00:00");
+  if(persist_read_bool(KEY_BATTERY) == false) {
+    text_layer_set_text(big_rest_layer, "00");
+  } else {
+    text_layer_set_text(big_rest_layer, "00:00");
+  }
   text_layer_set_text_alignment(big_rest_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)big_rest_layer);
   
@@ -189,7 +234,11 @@ void handle_init() {
   text_layer_set_background_color(remaining_rest_layer, GColorClear);
   text_layer_set_font(remaining_rest_layer, small_font);
   text_layer_set_text_color(remaining_rest_layer, GColorWhite);
-  text_layer_set_text(remaining_rest_layer, "45:00");
+  if(persist_read_bool(KEY_BATTERY) == false) {
+    text_layer_set_text(remaining_rest_layer, "45");
+  } else {
+    text_layer_set_text(remaining_rest_layer, "45:00");
+  }
   text_layer_set_text_alignment(remaining_rest_layer, GTextAlignmentLeft);
   layer_add_child(root_layer, (Layer*)remaining_rest_layer);
   
@@ -448,8 +497,13 @@ void update_stopwatch() {
   }
 
   // Create string from timer and remaining time for display
-  snprintf(big_time, 9, "%d:%02d:%02d", hours, minutes, seconds);
-  snprintf(remaining_drive, 9, "%d:%02d:%02d", rHours, rMinutes, rSeconds);
+  if(persist_read_bool(KEY_BATTERY) == false) {
+    snprintf(big_time, 9, "%d:%02d", hours, minutes);
+    snprintf(remaining_drive, 9, "%d:%02d", rHours, rMinutes);
+  } else {
+    snprintf(big_time, 9, "%d:%02d:%02d", hours, minutes, seconds);
+    snprintf(remaining_drive, 9, "%d:%02d:%02d", rHours, rMinutes, rSeconds);
+  }
 
   // Now draw the strings.
   text_layer_set_text(big_time_layer, big_time);
@@ -489,8 +543,13 @@ void update_rest_stopwatch() {
   }
 
   // Create string from timer and remaining time for display
-  snprintf(rest_time, 9, "%02d:%02d", rest_minutes, rest_seconds);
-  snprintf(remaining_rest, 9, "%02d:%02d", rest_rMinutes, rest_rSeconds);
+  if(persist_read_bool(KEY_BATTERY) == false) {
+    snprintf(rest_time, 9, "%02d", rest_minutes);
+    snprintf(remaining_rest, 9, "%02d", rest_rMinutes);
+  } else {
+    snprintf(rest_time, 9, "%02d:%02d", rest_minutes, rest_seconds);
+    snprintf(remaining_rest, 9, "%02d:%02d", rest_rMinutes, rest_rSeconds);
+  }
 
   // Now draw the strings.
   text_layer_set_text(big_rest_layer, rest_time);
