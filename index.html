@@ -1,72 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Driver Timer Settings</title>
+<html>
+    <head>
+      <!--Import materialize.css-->
+      <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"/>
+      <title>Driver Timer Settings</title>
+    </head>
 
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <body>
 
-  </head>
-  <body>
+      <div class="container">
 
-    <div class="container-fluid">
+        <div class="row">
 
-      <h1>Driver Timer Settings</h1>
+          <div class="col s12">
 
-      <div class="row">
+            <h1>Driver Timer Settings</h1>
 
-        <div class="col-xs-12">
+            <div class="card blue-grey darken-1">
 
-          <h2>Battery saver mode</h2>
-          <div class="radio_seconds">
-            <label>
-              <input type="checkbox" name="seconds_check" id="seconds_select" value="on">
-              Turning this on removes the seconds display to increase battery life
-            </label>
+              <div class="card-content white-text">
+
+                <span class="card-title">Battery saver mode</span>
+                <p>Turning this on removes the seconds display to increase battery life</p>
+
+                <div class="card-action">
+
+                  <form>
+                    <p>
+                      <input name="seconds_select" type="radio" id="test1" value="on"/>
+                      <label for="test1">On</label>
+                    </p>
+                    <p>
+                      <input name="seconds_select" type="radio" id="test2" value="off"/>
+                      <label for="test2">Off</label>
+                    </p>
+                  </form>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <button id="save_button" class="btn waves-effect waves-light">Save</button>
+
           </div>
-
-          <button id="save_button">Save</button>
 
         </div>
 
       </div>
 
-    </div>
+      <!--Import jQuery before materialize.js-->
+      <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+      <script type="text/javascript" src="js/materialize.min.js"></script>
 
-    </div>
+      <script>
 
-    <!-- jQuery (recessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-    <script>
+        //Setup to allow easy adding more options later
+        function saveOptions() {
+          // var secondsSelect = document.getElementById("seconds_select");
 
-      //Setup to allow easy adding more options later
-      function saveOptions() {
-        var secondsSelect = document.getElementById("seconds_select");
+          var options = {
+            "seconds": $('input[name=seconds_select]:checked').val()
+          }
 
-        var options = {
-          "seconds": secondsSelect.value
-        }
+          // console.log(options);
 
-        return options;
-      };
+          return options;
+        };
 
-      var submitButton = document.getElementById("save_button");
-      submitButton.addEventListener("click",
-      function() {
-        console.log("Submit");
+        var submitButton = document.getElementById("save_button");
+        submitButton.addEventListener("click",
+        function() {
+          console.log("Submit");
 
-        var options = saveOptions();
-        var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));
+          var options = saveOptions();
+          var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(options));
 
-        document.location = location;
-      },
-      false);
+          document.location = location;
+        },
+        false);
 
-    </script>
-  </body>
-</html>
+      </script>
+
+    </body>
+  </html>
