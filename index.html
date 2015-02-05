@@ -59,9 +59,21 @@
 
       <script>
 
+        $(document).ready(function() {
+          var battery = getURLVariable('battery');
+          battery = decodeURI(battery);
+
+          // console.log(storedSettings);
+
+          if (battery == 'yes') {
+            $('#saver_on').attr('checked', 'checked');
+          } else {
+            $('#saver_off').attr('checked', 'checked');
+          }
+        });
+
         //Setup to allow easy adding more options later
         function saveOptions() {
-          // var secondsSelect = document.getElementById("seconds_select");
 
           var options = {
             "seconds": $('input[name=seconds_select]:checked').val()
@@ -83,6 +95,15 @@
           document.location = location;
         },
         false);
+
+        function getURLVariable(name) {
+          name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+          var regexS = "[\\?&]"+name+"=([^&#]*)",
+              regex = new RegExp(regexS),
+              results = regex.exec(window.location.href);
+          if (results == null) return "";
+          else return results[1];
+        }
 
       </script>
 
