@@ -1,4 +1,5 @@
 var battery;
+var rules;
 
 Pebble.addEventListener("ready",
   function(e) {
@@ -10,7 +11,8 @@ Pebble.addEventListener("showConfiguration",
   function(e) {
     //Load the remote config page and settings from JS
     battery = window.localStorage.getItem('battery');
-    Pebble.openURL("http://sephallen.github.io/DriverTimer/index.html?battery=" + battery);
+    rules = window.localStorage.getItem('rules');
+    Pebble.openURL("http://sephallen.github.io/DriverTimer/index.html?battery=" + battery + "&rules=" + rules);
   }
 );
 
@@ -23,15 +25,16 @@ Pebble.addEventListener("webviewclosed",
     console.log("Configuration window returned: " + JSON.stringify(configuration));
     // Store settings in JS
     window.localStorage.setItem('battery', configuration.seconds);
+    window.localStorage.setItem('rules', configuration.rules);
  
     //Send to Pebble, persist there
     Pebble.sendAppMessage(
-      {"KEY_BATTERY": configuration.seconds},
+      {'0': configuration.seconds, '1': configuration.rules},
       function(e) {
         console.log("Sending settings data...");
       },
       function(e) {
-        console.log("Settings feedback failed!");
+        console.log("Sending settings failed!");
       }
     );
   }

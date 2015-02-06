@@ -1,6 +1,7 @@
 {
     "appKeys": {
-        "KEY_BATTERY": 0
+        "KEY_BATTERY": 0,
+        "KEY_RULES": 1
     },
     "capabilities": [
         "configurable"

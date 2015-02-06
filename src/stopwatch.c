@@ -75,6 +75,9 @@ static double pause_rest_time = 0;
   
 // Settings Keys
 #define KEY_BATTERY 0
+#define KEY_RULES 1
+bool battery_setting;
+bool rules_setting;
   
 double float_time_ms() {
 	time_t seconds;
@@ -92,6 +95,8 @@ struct StopwatchState {
 	double rest_elapsed_time;
 	double rest_start_time;
 	double pause_rest_time;
+  bool battery_setting;
+  bool rules_setting;
 } __attribute__((__packed__));
 
 void config_provider(Window *window);
@@ -110,25 +115,42 @@ void handle_timer(void* data);
 void handle_rest_timer(void* data);
 int main();
 
-static void in_recv_handler(DictionaryIterator *iterator, void *context)
-{
+static void in_recv_handler(DictionaryIterator *iterator, void *context) {
   //Get Tuple
   Tuple *t = dict_read_first(iterator);
-  if(t)
-  {
-    switch(t->key)
-    {
+  if(t) {
+    switch(t->key) {
     case KEY_BATTERY:
       //It's the KEY_BATTERY key
-      if(strcmp(t->value->cstring, "off") == 0)
-      {
+      if(strcmp(t->value->cstring, "off") == 0) {
         //Set and save as battery save mode off
-        persist_write_bool(KEY_BATTERY, true);
-      }
-      else if(strcmp(t->value->cstring, "on") == 0)
-      {
+        battery_setting = false;
+        update_stopwatch();
+        update_rest_stopwatch();
+      } else if(strcmp(t->value->cstring, "on") == 0) {
         //Set and save as battery save mode on
-        persist_write_bool(KEY_BATTERY, false);
+        battery_setting = true;
+        update_stopwatch();
+        update_rest_stopwatch();
+      }
+      break;
+    }
+  }
+  
+  Tuple *trules = dict_read_next(iterator);
+  if(trules) {
+    switch(trules->key) {
+      case KEY_RULES:
+      if(strcmp(trules->value->cstring, "driving") == 0) {
+        //Set and save as HGV mode
+        rules_setting = false;
+        update_stopwatch();
+        update_rest_stopwatch();
+      } else if(strcmp(trules->value->cstring, "domestic") == 0) {
+        //Set and save as domestic mode
+        rules_setting = true;
+        update_stopwatch();
+        update_rest_stopwatch();
       }
       break;
     }
@@ -137,7 +159,7 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
 
 void handle_init() {
   
-  // Receiving and loading settins data
+  // Receiving and loading settings data
   app_message_register_inbox_received((AppMessageInboxReceived) in_recv_handler);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   
@@ -168,7 +190,7 @@ void handle_init() {
   text_layer_set_background_color(big_time_layer, GColorClear);
   text_layer_set_font(big_time_layer, large_font);
   text_layer_set_text_color(big_time_layer, GColorWhite);
-  if(persist_read_bool(KEY_BATTERY) == false) {
+  if(battery_setting == true) {
     text_layer_set_text(big_time_layer, "0:00");
   } else {
     text_layer_set_text(big_time_layer, "0:00:00");
@@ -190,7 +212,7 @@ void handle_init() {
   text_layer_set_background_color(remaining_drive_layer, GColorClear);
   text_layer_set_font(remaining_drive_layer, small_font);
   text_layer_set_text_color(remaining_drive_layer, GColorWhite);
-  if(persist_read_bool(KEY_BATTERY) == false) {
+  if(battery_setting == true) {
     text_layer_set_text(remaining_drive_layer, "4:30");
   } else {
     text_layer_set_text(remaining_drive_layer, "4:30:00");
@@ -212,7 +234,7 @@ void handle_init() {
   text_layer_set_background_color(big_rest_layer, GColorClear);
   text_layer_set_font(big_rest_layer, large_font);
   text_layer_set_text_color(big_rest_layer, GColorWhite);
-  if(persist_read_bool(KEY_BATTERY) == false) {
+  if(battery_setting == true) {
     text_layer_set_text(big_rest_layer, "00");
   } else {
     text_layer_set_text(big_rest_layer, "00:00");
@@ -234,7 +256,7 @@ void handle_init() {
   text_layer_set_background_color(remaining_rest_layer, GColorClear);
   text_layer_set_font(remaining_rest_layer, small_font);
   text_layer_set_text_color(remaining_rest_layer, GColorWhite);
-  if(persist_read_bool(KEY_BATTERY) == false) {
+  if(battery_setting == true) {
     text_layer_set_text(remaining_rest_layer, "45");
   } else {
     text_layer_set_text(remaining_rest_layer, "45:00");
@@ -268,6 +290,8 @@ void handle_init() {
 		rest_start_time = state.rest_start_time;
 		rest_elapsed_time = state.rest_elapsed_time;
 		pause_rest_time = state.pause_rest_time;
+    battery_setting = state.battery_setting;
+    rules_setting = state.rules_setting;
     update_stopwatch();
 		update_rest_stopwatch();
 		if(started) {
@@ -321,6 +345,8 @@ void handle_deinit() {
 		.rest_start_time = rest_start_time,
 		.rest_elapsed_time = rest_elapsed_time,
 		.pause_rest_time = pause_rest_time,
+    .battery_setting = battery_setting,
+    .rules_setting = rules_setting,
 	};
 	status_t status = persist_write_data(PERSIST_STATE, &state, sizeof(state));
 	if(status < S_SUCCESS) {
@@ -397,31 +423,55 @@ void toggle_stopwatch_handler(ClickRecognizerRef recognizer, Window *window) {
   if(rest_started) {
     stop_rest_stopwatch();
   }
-  if(rest_elapsed_time < 900) {
-    rest_start_time = 0;
-    rest_elapsed_time = 0;
-    update_rest_stopwatch();
-  }
-  if(rest_elapsed_time >= 900 ) {
-    if(rest_elapsed_time <= 2700) {
-      double rest_now = float_time_ms();
-      rest_start_time = rest_now - 900;
-      rest_elapsed_time = 900;
+  if(rules_setting == true) {
+    if(rest_elapsed_time < 1800) {
+      rest_start_time = 0;
+      rest_elapsed_time = 0;
       update_rest_stopwatch();
     }
+  } else {
+    if(rest_elapsed_time < 900) {
+      rest_start_time = 0;
+      rest_elapsed_time = 0;
+      update_rest_stopwatch();
+    }
+    if(rest_elapsed_time >= 900 ) {
+      if(rest_elapsed_time <= 2700) {
+        double rest_now = float_time_ms();
+        rest_start_time = rest_now - 900;
+        rest_elapsed_time = 900;
+        update_rest_stopwatch();
+      }
+    }
   }
-  if(rest_elapsed_time >= 2700) {
-    bool is_running = started;
-    bool rest_is_running = rest_started;
-    start_time = 0;
-    rest_start_time = 0;
-    elapsed_time = 0;
-    rest_elapsed_time = 0;
-    if(is_running) stop_stopwatch();
-    if(rest_is_running) stop_rest_stopwatch();
-    update_stopwatch();
-    update_rest_stopwatch();
-    start_stopwatch();
+  if(rules_setting == true) {
+    if(rest_elapsed_time >= 1800) {
+      bool is_running = started;
+      bool rest_is_running = rest_started;
+      start_time = 0;
+      rest_start_time = 0;
+      elapsed_time = 0;
+      rest_elapsed_time = 0;
+      if(is_running) stop_stopwatch();
+      if(rest_is_running) stop_rest_stopwatch();
+      update_stopwatch();
+      update_rest_stopwatch();
+      start_stopwatch();
+    }
+  } else {
+    if(rest_elapsed_time >= 2700) {
+      bool is_running = started;
+      bool rest_is_running = rest_started;
+      start_time = 0;
+      rest_start_time = 0;
+      elapsed_time = 0;
+      rest_elapsed_time = 0;
+      if(is_running) stop_stopwatch();
+      if(rest_is_running) stop_rest_stopwatch();
+      update_stopwatch();
+      update_rest_stopwatch();
+      start_stopwatch();
+    }
   }
 }
 
@@ -463,41 +513,48 @@ void update_stopwatch() {
   
   static char big_time[] = "0:00:00";
   static char remaining_drive[] = "0:00:00";
+  
+  int drive_seconds;
+  if(rules_setting == true) {
+    drive_seconds = 19800;
+  } else {
+    drive_seconds = 16200;
+  }
 
   // Now convert to hours/minutes/seconds.
   int seconds = (int)elapsed_time % 60;
   int minutes = (int)elapsed_time / 60 % 60;
   int hours = (int)elapsed_time / 3600;
-  int rSeconds = (16200 - (int)elapsed_time) % 60;
-  int rMinutes = (16200 - (int)elapsed_time) / 60 % 60;
-  int rHours = (16200 - (int)elapsed_time) / 3600;
+  int rSeconds = (drive_seconds - (int)elapsed_time) % 60;
+  int rMinutes = (drive_seconds - (int)elapsed_time) / 60 % 60;
+  int rHours = (drive_seconds - (int)elapsed_time) / 3600;
   
   // When one hour of driving time remains, alert user with a short pulse
-  if((int)elapsed_time == 12600) {
+  if((int)elapsed_time == (drive_seconds - 3600)) {
     vibes_short_pulse();
     return;
   }
   
   // When thirty minutes of driving time remain, alert user with a short pulse
-  if((int)elapsed_time == 14400) {
+  if((int)elapsed_time == (drive_seconds - 1800)) {
     vibes_short_pulse();
     return;
   }
 
   // When driver time runs out, stop timer and alert user with a short pulse
-  if((int)elapsed_time == 16199) {
+  if((int)elapsed_time == (drive_seconds - 1)) {
     vibes_short_pulse();
     return;
   }
   
-  if((int)elapsed_time > 16200) {
+  if((int)elapsed_time > drive_seconds) {
     stop_stopwatch();
     vibes_cancel();
     return;
   }
 
   // Create string from timer and remaining time for display
-  if(persist_read_bool(KEY_BATTERY) == false) {
+  if(battery_setting == true) {
     snprintf(big_time, 9, "%d:%02d", hours, minutes);
     snprintf(remaining_drive, 9, "%d:%02d", rHours, rMinutes);
   } else {
@@ -515,26 +572,35 @@ void update_rest_stopwatch() {
   
   static char rest_time[] = "00:00";
   static char remaining_rest[] = "00:00";
+  
+  int rest_total_seconds;
+  if(rules_setting == true) {
+    rest_total_seconds = 1800;
+  } else {
+    rest_total_seconds = 2700;
+  }
 
   // Now convert to hours/minutes/seconds.
   int rest_seconds = (int)rest_elapsed_time % 60;
   int rest_minutes = (int)rest_elapsed_time / 60 % 60;
-  int rest_rSeconds = (2700 - (int)rest_elapsed_time) % 60;
-  int rest_rMinutes = (2700 - (int)rest_elapsed_time) / 60 % 60;
+  int rest_rSeconds = (rest_total_seconds - (int)rest_elapsed_time) % 60;
+  int rest_rMinutes = (rest_total_seconds - (int)rest_elapsed_time) / 60 % 60;
   
   // When fifteen minutes of rest time has passed, alert user with a short pulse
-  if((int)rest_elapsed_time == 899) {
-    vibes_short_pulse();
-    return;
+  if(rules_setting == false) {
+    if((int)rest_elapsed_time == 899) {
+      vibes_short_pulse();
+      return;
+    }
   }
-
+  
   // When rest time is completed, stop timer, alert user with a short pulse and reset drive timer
-  if((int)rest_elapsed_time == 2699) {
+  if((int)rest_elapsed_time == (rest_total_seconds - 1)) {
     vibes_short_pulse();
     return;
   }
   
-  if((int)rest_elapsed_time > 2700) {
+  if((int)rest_elapsed_time > rest_total_seconds) {
     stop_rest_stopwatch();
     start_time = 0;
     elapsed_time = 0;
@@ -543,7 +609,7 @@ void update_rest_stopwatch() {
   }
 
   // Create string from timer and remaining time for display
-  if(persist_read_bool(KEY_BATTERY) == false) {
+  if(battery_setting == true) {
     snprintf(rest_time, 9, "%02d", rest_minutes);
     snprintf(remaining_rest, 9, "%02d", rest_rMinutes);
   } else {
