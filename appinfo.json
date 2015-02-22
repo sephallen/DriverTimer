@@ -58,9 +58,9 @@
         ]
     },
     "shortName": "Driver Timer",
-    "uuid": "11a1cb08-065f-491e-82c4-83b9f9cb042c",
+    "uuid": "133200d5-6885-4850-8329-97690a5a115f",
     "versionCode": 2,
-    "versionLabel": "1.0",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": false
     }

@@ -549,7 +549,6 @@ void update_stopwatch() {
   
   if((int)elapsed_time > drive_seconds) {
     stop_stopwatch();
-    vibes_cancel();
     return;
   }
 
